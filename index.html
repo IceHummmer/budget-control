@@ -338,7 +338,7 @@
     const ordered=[...state.expenses].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
     const rows=showAll?ordered:ordered.slice(0,6);
     $('toggleAll').textContent=showAll?'Скрыть':'Показати все';
-    $('expenseList').innerHTML=rows.length?rows.map(e=>'<div class="tx"><div><div class="txTitle">'+esc(e.category)+(e.comment?' · '+esc(e.comment):'')+'</div><div class="txMeta">'+dateText(e.date)+'</div></div><div class="txAmount">'+money(num(e.amount))+'</div><button class="xBtn" data-del="'+esc(e.id)+'" type="button" aria-label="Видалити">×</button></div>').join(''):'<div class="empty">Расходов пока нет.</div>';
+    $('expenseList').innerHTML=rows.length?rows.map(e=>'<div class="tx"><div><div class="txTitle">'+esc(e.category)+(e.comment?' · '+esc(e.comment):'')+'</div><div class="txMeta">'+dateText(e.date)+'</div></div><div class="txAmount">'+money(num(e.amount))+'</div><button class="xBtn" data-del="'+esc(e.id)+'" type="button" aria-label="Видалити">×</button></div>').join(''):'<div class="empty">Витрат поки немає.</div>';
     document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
       if(confirm('Видалити цей запис?')){state.expenses=state.expenses.filter(e=>e.id!==b.dataset.del);save();render();toast('Витрату видалено')}
     }));
