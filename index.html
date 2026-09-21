@@ -23,7 +23,7 @@
     body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
     button,input,select{font:inherit}
     button{cursor:pointer}
-    .app{max-width:920px;margin:0 auto;padding:18px 14px 42px}
+    .app{max-width:920px;margin:0 auto;padding:18px 14px 110px}
     .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:4px 0 16px}
     .eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
     h1{font-size:25px;margin:4px 0 0;letter-spacing:-.03em}
@@ -58,6 +58,16 @@
     .btn.danger{background:#fff;color:var(--red);border:1px solid #efc7c2}
     .btn.smallBtn{min-height:40px;padding:8px 12px;font-size:13px}
     .addBtn{width:100%;margin-top:10px}
+    .floatingAdd{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);
+      width:min(892px,calc(100% - 24px));min-height:54px;border:0;border-radius:16px;padding:12px 18px;
+      background:var(--green);color:#fff;font-weight:780;font-size:17px;box-shadow:0 10px 28px rgba(20,38,31,.22);z-index:8}
+    .floatingAdd:active{transform:translateX(-50%) scale(.99)}
+    .expenseModal{width:min(500px,100%);max-height:min(82vh,720px);overflow:auto}
+    .expenseModal .fields{grid-template-columns:1fr 1fr}
+    .expenseModal .full{grid-column:1/-1}
+    .modalTop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .modalTop h2{margin:0}
+    .modalClose{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:22px;line-height:1}
     .cat{margin:12px 0}
     .catTop{display:flex;justify-content:space-between;gap:10px;font-size:14px}
     .catBar{height:7px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:6px}
@@ -83,12 +93,12 @@
     .modal h2{font-size:20px;margin:0 0 8px}
     .modal p{font-size:14px;color:var(--muted);line-height:1.5;margin:0}
     .modalActions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
-    .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,12px);
+    .toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translate(-50%,12px);
       background:#17251f;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:20}
     .toast.show{opacity:1;transform:translate(-50%,0)}
     .hide{display:none!important}
     @media(max-width:720px){
-      .g2,.g22,.fields,.debtFields,.settingsGrid{grid-template-columns:1fr}
+      .g2,.g22,.fields,.debtFields,.settingsGrid,.expenseModal .fields{grid-template-columns:1fr}
       .moneyBig{font-size:31px}
       .app{padding-left:12px;padding-right:12px}
       .card{padding:16px}
@@ -131,37 +141,6 @@
       <div><span class="safeValue" id="weeklySafe">101,50 €</span><span class="safeUnit">на следующие 7 дней</span></div>
     </div>
     <div class="status" id="paceMessage">Добавь первую трату — лимиты пересчитаются автоматически.</div>
-  </section>
-
-  <section class="card section">
-    <div class="sectionHead">Добавить расход</div>
-    <form id="expenseForm">
-      <div class="fields">
-        <div class="field">
-          <label for="amount">Сумма, €</label>
-          <input id="amount" inputmode="decimal" placeholder="12,50" required>
-        </div>
-        <div class="field">
-          <label for="category">Категория</label>
-          <select id="category">
-            <option>Еда/вода</option>
-            <option>Бензин</option>
-            <option>Никотин</option>
-            <option>Развлечения</option>
-            <option>Прочее</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="expenseDate">Дата</label>
-          <input id="expenseDate" type="date">
-        </div>
-        <div class="field">
-          <label for="comment">Комментарий</label>
-          <input id="comment" maxlength="100" placeholder="Необязательно">
-        </div>
-      </div>
-      <button class="btn addBtn" type="submit">+ Добавить расход</button>
-    </form>
   </section>
 
   <section class="grid g22 section">
@@ -226,6 +205,44 @@
     </details>
   </section>
 </main>
+
+<button class="floatingAdd" id="openExpenseModal" type="button">+ Добавить расход</button>
+
+<div class="modalBack" id="expenseModal" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
+  <div class="modal expenseModal">
+    <div class="modalTop">
+      <h2 id="expenseModalTitle">Добавить расход</h2>
+      <button class="modalClose" id="closeExpenseModal" type="button" aria-label="Закрыть">×</button>
+    </div>
+    <form id="expenseForm">
+      <div class="fields">
+        <div class="field full">
+          <label for="amount">Сумма, €</label>
+          <input id="amount" inputmode="decimal" placeholder="12,50" required>
+        </div>
+        <div class="field">
+          <label for="category">Категория</label>
+          <select id="category">
+            <option>Еда/вода</option>
+            <option>Бензин</option>
+            <option>Никотин</option>
+            <option>Развлечения</option>
+            <option>Прочее</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="expenseDate">Дата</label>
+          <input id="expenseDate" type="date">
+        </div>
+        <div class="field full">
+          <label for="comment">Комментарий</label>
+          <input id="comment" maxlength="100" placeholder="Необязательно">
+        </div>
+      </div>
+      <button class="btn addBtn" type="submit">Добавить расход</button>
+    </form>
+  </div>
+</div>
 
 <div class="modalBack" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
@@ -319,6 +336,18 @@
     }));
   }
 
+  function openExpenseModal(){
+    $('expenseDate').value=$('expenseDate').value||ymd(today());
+    $('expenseModal').classList.add('show');
+    setTimeout(()=>$('amount').focus(),120);
+  }
+  function closeExpenseModal(){
+    $('expenseModal').classList.remove('show');
+  }
+  $('openExpenseModal').addEventListener('click',openExpenseModal);
+  $('closeExpenseModal').addEventListener('click',closeExpenseModal);
+  $('expenseModal').addEventListener('click',e=>{if(e.target===$('expenseModal'))closeExpenseModal()});
+
   $('expenseForm').addEventListener('submit',e=>{
     e.preventDefault();
     const amount=num($('amount').value);
@@ -328,7 +357,7 @@
       amount,category:$('category').value,date:$('expenseDate').value||ymd(today()),
       comment:$('comment').value.trim(),createdAt:Date.now()
     });
-    $('amount').value='';$('comment').value='';save();render();toast('Расход добавлен');
+    $('amount').value='';$('comment').value='';save();render();closeExpenseModal();toast('Расход добавлен');
   });
 
   $('payday').addEventListener('change',()=>{if($('payday').value){state.payday=$('payday').value;save();render()}});
