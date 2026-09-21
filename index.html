@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f6f5f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Бюджет">
+  <meta name="description" content="Личный контроль расходов и безопасного бюджета до зарплаты">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <title>Контроль расходов</title>
+  <style>
+    :root{
+      --bg:#f6f5f1;--card:#fff;--text:#15261f;--muted:#66736d;--line:#dfe3df;
+      --soft:#f3f5f3;--green:#245847;--green2:#2f725d;--greenSoft:#eaf3ef;
+      --red:#b42318;--redSoft:#fff0ee;--shadow:0 8px 22px rgba(20,38,31,.06);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+    body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:920px;margin:0 auto;padding:18px 14px 42px}
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:4px 0 16px}
+    .eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+    h1{font-size:25px;margin:4px 0 0;letter-spacing:-.03em}
+    .grid{display:grid;gap:12px}
+    .g2{grid-template-columns:minmax(0,1.7fr) minmax(220px,.8fr)}
+    .g22{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+    .cardTitle{font-size:13px;color:var(--muted);margin-bottom:7px}
+    .moneyBig{font-size:34px;font-weight:800;letter-spacing:-.035em}
+    .moneyMid{font-size:26px;font-weight:760;letter-spacing:-.025em}
+    .small{font-size:13px;color:var(--muted)}
+    .progress{height:9px;border-radius:999px;background:#e8ece9;overflow:hidden;margin:13px 0 8px}
+    .progress span{display:block;height:100%;border-radius:999px;background:var(--green2);transition:width .2s ease}
+    .payRow{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .safeNumbers{display:flex;gap:26px;flex-wrap:wrap;margin-top:8px}
+    .safeValue{font-size:27px;font-weight:780;letter-spacing:-.025em}
+    .safeUnit{font-size:13px;color:var(--muted);margin-left:5px;font-weight:500}
+    .status{margin-top:13px;padding:11px 13px;border-radius:13px;background:var(--greenSoft);color:var(--green);font-size:13px;line-height:1.4}
+    .status.bad{background:var(--redSoft);color:var(--red)}
+    .section{margin-top:12px}
+    .sectionHead{font-size:17px;font-weight:760;margin:2px 0 13px}
+    .fields{display:grid;grid-template-columns:1fr 1.2fr 1fr 1.4fr;gap:10px}
+    .field{display:grid;gap:6px}
+    .field label{font-size:12px;color:var(--muted)}
+    input,select{
+      width:100%;min-height:46px;border:1px solid var(--line);border-radius:13px;background:#fff;
+      color:var(--text);padding:10px 12px;outline:none;font-size:16px
+    }
+    input:focus,select:focus{border-color:var(--green2);box-shadow:0 0 0 3px rgba(47,114,93,.11)}
+    .btn{min-height:46px;border:0;border-radius:13px;padding:10px 16px;font-weight:720;background:var(--green);color:#fff}
+    .btn.secondary{background:var(--soft);color:var(--text);border:1px solid var(--line)}
+    .btn.danger{background:#fff;color:var(--red);border:1px solid #efc7c2}
+    .btn.smallBtn{min-height:40px;padding:8px 12px;font-size:13px}
+    .addBtn{width:100%;margin-top:10px}
+    .cat{margin:12px 0}
+    .catTop{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+    .catBar{height:7px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:6px}
+    .catBar span{height:100%;display:block;background:var(--green2);border-radius:999px}
+    .tx{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+    .tx:last-child{border-bottom:0}
+    .txTitle{font-weight:690;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .txMeta{font-size:12px;color:var(--muted);margin-top:3px}
+    .txAmount{font-weight:760;white-space:nowrap}
+    .xBtn{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:19px}
+    .empty{color:var(--muted);font-size:13px;padding:10px 0}
+    .debt{margin-top:12px;border-color:#c8d8d1}
+    .debtHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .debtFields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+    .debtActions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+    details summary{font-weight:760;cursor:pointer}
+    .settingsGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    .settingsActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:10px}
+    .modalBack{position:fixed;inset:0;background:rgba(9,20,16,.42);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
+    .modalBack.show{display:flex}
+    .modal{width:min(440px,100%);background:#fff;border-radius:20px;padding:20px;box-shadow:0 22px 60px rgba(0,0,0,.22)}
+    .modal h2{font-size:20px;margin:0 0 8px}
+    .modal p{font-size:14px;color:var(--muted);line-height:1.5;margin:0}
+    .modalActions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+    .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,12px);
+      background:#17251f;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:20}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .hide{display:none!important}
+    @media(max-width:720px){
+      .g2,.g22,.fields,.debtFields,.settingsGrid{grid-template-columns:1fr}
+      .moneyBig{font-size:31px}
+      .app{padding-left:12px;padding-right:12px}
+      .card{padding:16px}
+      .safeNumbers{gap:16px}
+      .payRow{align-items:flex-start}
+    }
+  </style>
+</head>
+<body>
+<main class="app">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Личный бюджет</div>
+      <h1>Контроль расходов</h1>
+    </div>
+    <div class="small" id="todayLabel"></div>
+  </div>
+
+  <section class="grid g2">
+    <div class="card">
+      <div class="cardTitle">Осталось на прочие расходы</div>
+      <div class="moneyBig" id="remaining">435,00 €</div>
+      <div class="progress"><span id="budgetProgress" style="width:100%"></span></div>
+      <div class="small" id="spentText">Потрачено 0,00 € из 435,00 €</div>
+    </div>
+    <div class="card">
+      <div class="cardTitle">До зарплаты</div>
+      <div class="moneyMid" id="daysLeft">30 дней</div>
+      <div class="field" style="margin-top:12px">
+        <label for="payday">Дата зарплаты</label>
+        <input id="payday" type="date">
+      </div>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="cardTitle">Безопасно тратить</div>
+    <div class="safeNumbers">
+      <div><span class="safeValue" id="dailySafe">14,50 €</span><span class="safeUnit">в день</span></div>
+      <div><span class="safeValue" id="weeklySafe">101,50 €</span><span class="safeUnit">на следующие 7 дней</span></div>
+    </div>
+    <div class="status" id="paceMessage">Добавь первую трату — лимиты пересчитаются автоматически.</div>
+  </section>
+
+  <section class="card section">
+    <div class="sectionHead">Добавить расход</div>
+    <form id="expenseForm">
+      <div class="fields">
+        <div class="field">
+          <label for="amount">Сумма, €</label>
+          <input id="amount" inputmode="decimal" placeholder="12,50" required>
+        </div>
+        <div class="field">
+          <label for="category">Категория</label>
+          <select id="category">
+            <option>Еда/вода</option>
+            <option>Бензин</option>
+            <option>Никотин</option>
+            <option>Развлечения</option>
+            <option>Прочее</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="expenseDate">Дата</label>
+          <input id="expenseDate" type="date">
+        </div>
+        <div class="field">
+          <label for="comment">Комментарий</label>
+          <input id="comment" maxlength="100" placeholder="Необязательно">
+        </div>
+      </div>
+      <button class="btn addBtn" type="submit">+ Добавить расход</button>
+    </form>
+  </section>
+
+  <section class="grid g22 section">
+    <div class="card">
+      <div class="sectionHead">По категориям</div>
+      <div id="categoryStats"></div>
+    </div>
+    <div class="card">
+      <div class="payRow">
+        <div class="sectionHead" style="margin:0">Последние расходы</div>
+        <button class="btn secondary smallBtn" id="toggleAll" type="button">Показать все</button>
+      </div>
+      <div id="expenseList"></div>
+    </div>
+  </section>
+
+  <section class="card debt">
+    <div class="debtHeader">
+      <div>
+        <div class="cardTitle">Долг рабочему счёту</div>
+        <div class="moneyBig" id="debtDisplay">1 700,00 €</div>
+        <div class="small" id="debtPlanText">Плановый платёж: 425,00 €</div>
+      </div>
+    </div>
+    <div class="debtFields">
+      <div class="field">
+        <label for="debtInput">Текущий остаток долга, €</label>
+        <input id="debtInput" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label for="debtPaymentInput">Сумма планового платежа, €</label>
+        <input id="debtPaymentInput" inputmode="decimal">
+      </div>
+    </div>
+    <div class="debtActions">
+      <button class="btn secondary" id="saveDebt" type="button">Сохранить суммы</button>
+      <button class="btn" id="payDebt" type="button">Внести платёж 425,00 €</button>
+    </div>
+  </section>
+
+  <section class="card section">
+    <details>
+      <summary>Настройки и резервная копия</summary>
+      <div class="settingsGrid">
+        <div class="field">
+          <label for="budgetInput">Свободный бюджет на период, €</label>
+          <input id="budgetInput" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label for="settingsPayday">Дата следующей зарплаты</label>
+          <input id="settingsPayday" type="date">
+        </div>
+      </div>
+      <div class="settingsActions">
+        <button class="btn secondary smallBtn" id="saveSettings" type="button">Сохранить настройки</button>
+        <button class="btn secondary smallBtn" id="exportBtn" type="button">Экспорт копии</button>
+        <button class="btn secondary smallBtn" id="importBtn" type="button">Импорт копии</button>
+        <button class="btn danger smallBtn" id="clearExpenses" type="button">Очистить расходы</button>
+        <input id="importFile" class="hide" type="file" accept="application/json">
+      </div>
+      <div class="note">Данные хранятся на этом устройстве в браузере. Для переноса на другой телефон используй экспорт и импорт.</div>
+    </details>
+  </section>
+</main>
+
+<div class="modalBack" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <h2 id="modalTitle">Подтвердить платёж?</h2>
+    <p id="modalText"></p>
+    <div class="modalActions">
+      <button class="btn secondary" id="cancelPayment" type="button">Отмена</button>
+      <button class="btn" id="confirmPayment" type="button">Подтвердить</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<script>
+(() => {
+  const KEY='budget-control-v2';
+  const CATS=['Еда/вода','Бензин','Никотин','Развлечения','Прочее'];
+  const $=id=>document.getElementById(id);
+  const money=n=>new Intl.NumberFormat('ru-RU',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(Number.isFinite(n)?n:0);
+  const num=v=>{const n=parseFloat(String(v??'').replace(/\s/g,'').replace(',','.'));return Number.isFinite(n)?n:0};
+  const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const today=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())};
+  const defaultPayday=()=>{const d=today();d.setDate(d.getDate()+30);return ymd(d)};
+  const utc=s=>{const a=String(s).split('-').map(Number);return Date.UTC(a[0],a[1]-1,a[2])};
+  const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  let state={budget:435,payday:defaultPayday(),debt:1700,debtPayment:425,expenses:[]};
+  let showAll=false;
+
+  function load(){
+    try{
+      const v=JSON.parse(localStorage.getItem(KEY));
+      if(!v)return;
+      state.budget=Math.max(0,num(v.budget));
+      state.payday=v.payday||defaultPayday();
+      state.debt=Math.max(0,num(v.debt));
+      state.debtPayment=Math.max(0,num(v.debtPayment));
+      state.expenses=Array.isArray(v.expenses)?v.expenses.filter(e=>e&&num(e.amount)>0):[];
+    }catch(e){}
+  }
+  const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
+  const totalSpent=()=>state.expenses.reduce((s,e)=>s+num(e.amount),0);
+  const daysLeft=()=>Math.max(1,Math.ceil((utc(state.payday)-utc(ymd(today())))/86400000));
+  function dayWord(n){const a=n%10,b=n%100;if(a===1&&b!==11)return'день';if(a>=2&&a<=4&&!(b>=12&&b<=14))return'дня';return'дней'}
+  function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.remove('show'),1800)}
+  function dateText(s){const a=s.split('-').map(Number);return new Intl.DateTimeFormat('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(a[0],a[1]-1,a[2]))}
+
+  function render(){
+    const spent=totalSpent();
+    const remain=state.budget-spent;
+    const days=daysLeft();
+    const daily=Math.max(0,remain)/days;
+    const weekly=daily*Math.min(7,days);
+    const pct=state.budget>0?Math.max(0,Math.min(100,remain/state.budget*100)):0;
+
+    $('remaining').textContent=money(remain);
+    $('budgetProgress').style.width=pct+'%';
+    $('spentText').textContent='Потрачено '+money(spent)+' из '+money(state.budget);
+    $('daysLeft').textContent=days+' '+dayWord(days);
+    $('dailySafe').textContent=money(daily);
+    $('weeklySafe').textContent=money(weekly);
+    $('payday').value=state.payday;
+    $('settingsPayday').value=state.payday;
+    $('budgetInput').value=state.budget;
+
+    const pace=$('paceMessage');
+    pace.className='status';
+    if(remain<0){pace.classList.add('bad');pace.textContent='Свободный бюджет превышен на '+money(Math.abs(remain))+'. Безопасный лимит сейчас — 0 €.'}
+    else if(state.expenses.length){pace.textContent='После каждой траты оставшиеся деньги автоматически перераспределяются на '+days+' '+dayWord(days)+'.'}
+    else pace.textContent='Добавь первую трату — лимиты пересчитаются автоматически.';
+
+    $('debtDisplay').textContent=money(state.debt);
+    $('debtPlanText').textContent=state.debt<=0?'Долг закрыт.':'Плановый платёж: '+money(state.debtPayment);
+    $('debtInput').value=state.debt;
+    $('debtPaymentInput').value=state.debtPayment;
+    const actualPay=Math.min(state.debt,state.debtPayment);
+    $('payDebt').textContent=state.debt<=0?'Долг закрыт':'Внести платёж '+money(actualPay);
+    $('payDebt').disabled=state.debt<=0||state.debtPayment<=0;
+
+    const totals=Object.fromEntries(CATS.map(c=>[c,0]));
+    state.expenses.forEach(e=>{if(totals[e.category]!==undefined)totals[e.category]+=num(e.amount)});
+    const max=Math.max(1,...Object.values(totals));
+    $('categoryStats').innerHTML=CATS.map(c=>'<div class="cat"><div class="catTop"><span>'+esc(c)+'</span><strong>'+money(totals[c])+'</strong></div><div class="catBar"><span style="width:'+(totals[c]/max*100)+'%"></span></div></div>').join('');
+
+    const ordered=[...state.expenses].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const rows=showAll?ordered:ordered.slice(0,6);
+    $('toggleAll').textContent=showAll?'Скрыть':'Показать все';
+    $('expenseList').innerHTML=rows.length?rows.map(e=>'<div class="tx"><div><div class="txTitle">'+esc(e.category)+(e.comment?' · '+esc(e.comment):'')+'</div><div class="txMeta">'+dateText(e.date)+'</div></div><div class="txAmount">'+money(num(e.amount))+'</div><button class="xBtn" data-del="'+esc(e.id)+'" type="button" aria-label="Удалить">×</button></div>').join(''):'<div class="empty">Расходов пока нет.</div>';
+    document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+      if(confirm('Удалить эту запись?')){state.expenses=state.expenses.filter(e=>e.id!==b.dataset.del);save();render();toast('Расход удалён')}
+    }));
+  }
+
+  $('expenseForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const amount=num($('amount').value);
+    if(amount<=0){toast('Введите сумму больше нуля');return}
+    state.expenses.push({
+      id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),
+      amount,category:$('category').value,date:$('expenseDate').value||ymd(today()),
+      comment:$('comment').value.trim(),createdAt:Date.now()
+    });
+    $('amount').value='';$('comment').value='';save();render();toast('Расход добавлен');
+  });
+
+  $('payday').addEventListener('change',()=>{if($('payday').value){state.payday=$('payday').value;save();render()}});
+  $('toggleAll').addEventListener('click',()=>{showAll=!showAll;render()});
+
+  $('saveDebt').addEventListener('click',()=>{
+    state.debt=Math.max(0,num($('debtInput').value));
+    state.debtPayment=Math.max(0,num($('debtPaymentInput').value));
+    save();render();toast('Суммы сохранены');
+  });
+
+  $('payDebt').addEventListener('click',()=>{
+    state.debt=Math.max(0,num($('debtInput').value));
+    state.debtPayment=Math.max(0,num($('debtPaymentInput').value));
+    const p=Math.min(state.debt,state.debtPayment);
+    if(p<=0){toast('Укажи сумму платежа');return}
+    $('modalText').textContent='Подтвердить платёж '+money(p)+' на рабочий счёт? После подтверждения остаток долга уменьшится.';
+    $('confirmModal').classList.add('show');
+  });
+  $('cancelPayment').addEventListener('click',()=>$('confirmModal').classList.remove('show'));
+  $('confirmModal').addEventListener('click',e=>{if(e.target===$('confirmModal'))$('confirmModal').classList.remove('show')});
+  $('confirmPayment').addEventListener('click',()=>{
+    const p=Math.min(state.debt,state.debtPayment);
+    state.debt=Math.max(0,state.debt-p);
+    save();$('confirmModal').classList.remove('show');render();toast('Платёж учтён: '+money(p));
+  });
+
+  $('saveSettings').addEventListener('click',()=>{
+    state.budget=Math.max(0,num($('budgetInput').value));
+    if($('settingsPayday').value)state.payday=$('settingsPayday').value;
+    save();render();toast('Настройки сохранены');
+  });
+
+  $('clearExpenses').addEventListener('click',()=>{
+    if(confirm('Удалить все внесённые расходы?')){state.expenses=[];save();render();toast('Расходы очищены')}
+  });
+
+  $('exportBtn').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='budget-backup-'+ymd(today())+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),400);
+  });
+  $('importBtn').addEventListener('click',()=>$('importFile').click());
+  $('importFile').addEventListener('change',async()=>{
+    const f=$('importFile').files[0];if(!f)return;
+    try{
+      const v=JSON.parse(await f.text());
+      if(!v||!Array.isArray(v.expenses))throw new Error();
+      state={budget:Math.max(0,num(v.budget)),payday:v.payday||defaultPayday(),debt:Math.max(0,num(v.debt)),debtPayment:Math.max(0,num(v.debtPayment)),expenses:v.expenses};
+      save();render();toast('Резервная копия загружена');
+    }catch(e){toast('Не удалось прочитать файл')}
+    $('importFile').value='';
+  });
+
+  load();
+  $('expenseDate').value=ymd(today());
+  $('todayLabel').textContent=new Intl.DateTimeFormat('ru-RU',{day:'2-digit',month:'long'}).format(today());
+  render();
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+})();
+</script>
+</body>
+</html>
