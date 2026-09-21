@@ -1,12 +1,12 @@
 {
-  "name": "Контроль расходов",
+  "name": "Контроль витрат",
   "short_name": "Бюджет",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f6f5f1",
   "theme_color": "#f6f5f1",
-  "lang": "ru",
+  "lang": "uk",
   "icons": [
     {
       "src": "./icon.svg",
