@@ -416,7 +416,7 @@
   $('expenseDate').value=ymd(today());
   $('todayLabel').textContent=new Intl.DateTimeFormat('ru-RU',{day:'2-digit',month:'long'}).format(today());
   render();
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=3').catch(()=>{}));
 })();
 </script>
 </body>
