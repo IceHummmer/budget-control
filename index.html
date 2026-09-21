@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -7,10 +7,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Бюджет">
-  <meta name="description" content="Личный контроль расходов и безопасного бюджета до зарплаты">
+  <meta name="description" content="Особистий контроль витрат і безпечного бюджету до зарплати">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <title>Контроль расходов</title>
+  <title>Контроль витрат</title>
   <style>
     :root{
       --bg:#f6f5f1;--card:#fff;--text:#15261f;--muted:#66736d;--line:#dfe3df;
@@ -111,47 +111,47 @@
 <main class="app">
   <div class="hero">
     <div>
-      <div class="eyebrow">Личный бюджет</div>
-      <h1>Контроль расходов</h1>
+      <div class="eyebrow">Особистий бюджет</div>
+      <h1>Контроль витрат</h1>
     </div>
     <div class="small" id="todayLabel"></div>
   </div>
 
   <section class="grid g2">
     <div class="card">
-      <div class="cardTitle">Осталось на прочие расходы</div>
+      <div class="cardTitle">Залишилося на інші витрати</div>
       <div class="moneyBig" id="remaining">435,00 €</div>
       <div class="progress"><span id="budgetProgress" style="width:100%"></span></div>
-      <div class="small" id="spentText">Потрачено 0,00 € из 435,00 €</div>
+      <div class="small" id="spentText">Витрачено 0,00 € із 435,00 €</div>
     </div>
     <div class="card">
-      <div class="cardTitle">До зарплаты</div>
-      <div class="moneyMid" id="daysLeft">30 дней</div>
+      <div class="cardTitle">До зарплати</div>
+      <div class="moneyMid" id="daysLeft">30 днів</div>
       <div class="field" style="margin-top:12px">
-        <label for="payday">Дата зарплаты</label>
+        <label for="payday">Дата зарплати</label>
         <input id="payday" type="date">
       </div>
     </div>
   </section>
 
   <section class="card section">
-    <div class="cardTitle">Безопасно тратить</div>
+    <div class="cardTitle">Безпечно витрачати</div>
     <div class="safeNumbers">
-      <div><span class="safeValue" id="dailySafe">14,50 €</span><span class="safeUnit">в день</span></div>
-      <div><span class="safeValue" id="weeklySafe">101,50 €</span><span class="safeUnit">на следующие 7 дней</span></div>
+      <div><span class="safeValue" id="dailySafe">14,50 €</span><span class="safeUnit">на день</span></div>
+      <div><span class="safeValue" id="weeklySafe">101,50 €</span><span class="safeUnit">на наступні 7 днів</span></div>
     </div>
-    <div class="status" id="paceMessage">Добавь первую трату — лимиты пересчитаются автоматически.</div>
+    <div class="status" id="paceMessage">Додайте першу витрату — ліміти буде перераховано автоматично.</div>
   </section>
 
   <section class="grid g22 section">
     <div class="card">
-      <div class="sectionHead">По категориям</div>
+      <div class="sectionHead">За категоріями</div>
       <div id="categoryStats"></div>
     </div>
     <div class="card">
       <div class="payRow">
-        <div class="sectionHead" style="margin:0">Последние расходы</div>
-        <button class="btn secondary smallBtn" id="toggleAll" type="button">Показать все</button>
+        <div class="sectionHead" style="margin:0">Останні витрати</div>
+        <button class="btn secondary smallBtn" id="toggleAll" type="button">Показати все</button>
       </div>
       <div id="expenseList"></div>
     </div>
@@ -160,74 +160,74 @@
   <section class="card debt">
     <div class="debtHeader">
       <div>
-        <div class="cardTitle">Долг рабочему счёту</div>
+        <div class="cardTitle">Борг робочому рахунку</div>
         <div class="moneyBig" id="debtDisplay">1 700,00 €</div>
-        <div class="small" id="debtPlanText">Плановый платёж: 425,00 €</div>
+        <div class="small" id="debtPlanText">Плановий платіж: 425,00 €</div>
       </div>
     </div>
     <div class="debtFields">
       <div class="field">
-        <label for="debtInput">Текущий остаток долга, €</label>
+        <label for="debtInput">Поточний залишок боргу, €</label>
         <input id="debtInput" inputmode="decimal">
       </div>
       <div class="field">
-        <label for="debtPaymentInput">Сумма планового платежа, €</label>
+        <label for="debtPaymentInput">Сума планового платежу, €</label>
         <input id="debtPaymentInput" inputmode="decimal">
       </div>
     </div>
     <div class="debtActions">
-      <button class="btn secondary" id="saveDebt" type="button">Сохранить суммы</button>
-      <button class="btn" id="payDebt" type="button">Внести платёж 425,00 €</button>
+      <button class="btn secondary" id="saveDebt" type="button">Зберегти суми</button>
+      <button class="btn" id="payDebt" type="button">Внести платіж 425,00 €</button>
     </div>
   </section>
 
   <section class="card section">
     <details>
-      <summary>Настройки и резервная копия</summary>
+      <summary>Налаштування та резервна копія</summary>
       <div class="settingsGrid">
         <div class="field">
-          <label for="budgetInput">Свободный бюджет на период, €</label>
+          <label for="budgetInput">Вільний бюджет на період, €</label>
           <input id="budgetInput" inputmode="decimal">
         </div>
         <div class="field">
-          <label for="settingsPayday">Дата следующей зарплаты</label>
+          <label for="settingsPayday">Дата наступної зарплати</label>
           <input id="settingsPayday" type="date">
         </div>
       </div>
       <div class="settingsActions">
-        <button class="btn secondary smallBtn" id="saveSettings" type="button">Сохранить настройки</button>
-        <button class="btn secondary smallBtn" id="exportBtn" type="button">Экспорт копии</button>
-        <button class="btn secondary smallBtn" id="importBtn" type="button">Импорт копии</button>
-        <button class="btn danger smallBtn" id="clearExpenses" type="button">Очистить расходы</button>
+        <button class="btn secondary smallBtn" id="saveSettings" type="button">Зберегти налаштування</button>
+        <button class="btn secondary smallBtn" id="exportBtn" type="button">Експорт копії</button>
+        <button class="btn secondary smallBtn" id="importBtn" type="button">Імпорт копії</button>
+        <button class="btn danger smallBtn" id="clearExpenses" type="button">Очистити витрати</button>
         <input id="importFile" class="hide" type="file" accept="application/json">
       </div>
-      <div class="note">Данные хранятся на этом устройстве в браузере. Для переноса на другой телефон используй экспорт и импорт.</div>
+      <div class="note">Дані зберігаються у браузері на цьому пристрої. Для перенесення на інший телефон використовуйте експорт та імпорт.</div>
     </details>
   </section>
 </main>
 
-<button class="floatingAdd" id="openExpenseModal" type="button">+ Добавить расход</button>
+<button class="floatingAdd" id="openExpenseModal" type="button">+ Додати витрату</button>
 
 <div class="modalBack" id="expenseModal" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
   <div class="modal expenseModal">
     <div class="modalTop">
-      <h2 id="expenseModalTitle">Добавить расход</h2>
-      <button class="modalClose" id="closeExpenseModal" type="button" aria-label="Закрыть">×</button>
+      <h2 id="expenseModalTitle">Додати витрату</h2>
+      <button class="modalClose" id="closeExpenseModal" type="button" aria-label="Закрити">×</button>
     </div>
     <form id="expenseForm">
       <div class="fields">
         <div class="field full">
-          <label for="amount">Сумма, €</label>
+          <label for="amount">Сума, €</label>
           <input id="amount" inputmode="decimal" placeholder="12,50" required>
         </div>
         <div class="field">
-          <label for="category">Категория</label>
+          <label for="category">Категорія</label>
           <select id="category">
-            <option>Еда/вода</option>
+            <option>Їжа/вода</option>
             <option>Бензин</option>
-            <option>Никотин</option>
-            <option>Развлечения</option>
-            <option>Прочее</option>
+            <option>Нікотин</option>
+            <option>Розваги</option>
+            <option>Інше</option>
           </select>
         </div>
         <div class="field">
@@ -235,22 +235,22 @@
           <input id="expenseDate" type="date">
         </div>
         <div class="field full">
-          <label for="comment">Комментарий</label>
-          <input id="comment" maxlength="100" placeholder="Необязательно">
+          <label for="comment">Коментар</label>
+          <input id="comment" maxlength="100" placeholder="Необов’язково">
         </div>
       </div>
-      <button class="btn addBtn" type="submit">Добавить расход</button>
+      <button class="btn addBtn" type="submit">Додати витрату</button>
     </form>
   </div>
 </div>
 
 <div class="modalBack" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
-    <h2 id="modalTitle">Подтвердить платёж?</h2>
+    <h2 id="modalTitle">Підтвердити платіж?</h2>
     <p id="modalText"></p>
     <div class="modalActions">
-      <button class="btn secondary" id="cancelPayment" type="button">Отмена</button>
-      <button class="btn" id="confirmPayment" type="button">Подтвердить</button>
+      <button class="btn secondary" id="cancelPayment" type="button">Скасувати</button>
+      <button class="btn" id="confirmPayment" type="button">Підтвердити</button>
     </div>
   </div>
 </div>
@@ -259,9 +259,17 @@
 <script>
 (() => {
   const KEY='budget-control-v2';
-  const CATS=['Еда/вода','Бензин','Никотин','Развлечения','Прочее'];
+  const CATS=['Їжа/вода','Бензин','Нікотин','Розваги','Інше'];
+  const CATEGORY_MAP={
+    'Еда/вода':'Їжа/вода','Їжа/вода':'Їжа/вода',
+    'Бензин':'Бензин',
+    'Никотин':'Нікотин','Нікотин':'Нікотин',
+    'Развлечения':'Розваги','Розваги':'Розваги',
+    'Прочее':'Інше','Інше':'Інше'
+  };
+  const normalizeCategory=v=>CATEGORY_MAP[v]||v;
   const $=id=>document.getElementById(id);
-  const money=n=>new Intl.NumberFormat('ru-RU',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(Number.isFinite(n)?n:0);
+  const money=n=>new Intl.NumberFormat('uk-UA',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(Number.isFinite(n)?n:0);
   const num=v=>{const n=parseFloat(String(v??'').replace(/\s/g,'').replace(',','.'));return Number.isFinite(n)?n:0};
   const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const today=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())};
@@ -280,15 +288,15 @@
       state.payday=v.payday||defaultPayday();
       state.debt=Math.max(0,num(v.debt));
       state.debtPayment=Math.max(0,num(v.debtPayment));
-      state.expenses=Array.isArray(v.expenses)?v.expenses.filter(e=>e&&num(e.amount)>0):[];
+      state.expenses=Array.isArray(v.expenses)?v.expenses.filter(e=>e&&num(e.amount)>0).map(e=>({...e,category:normalizeCategory(e.category)})):[];
     }catch(e){}
   }
   const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
   const totalSpent=()=>state.expenses.reduce((s,e)=>s+num(e.amount),0);
   const daysLeft=()=>Math.max(1,Math.ceil((utc(state.payday)-utc(ymd(today())))/86400000));
-  function dayWord(n){const a=n%10,b=n%100;if(a===1&&b!==11)return'день';if(a>=2&&a<=4&&!(b>=12&&b<=14))return'дня';return'дней'}
+  function dayWord(n){const a=n%10,b=n%100;if(a===1&&b!==11)return'день';if(a>=2&&a<=4&&!(b>=12&&b<=14))return'дні';return'днів'}
   function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.remove('show'),1800)}
-  function dateText(s){const a=s.split('-').map(Number);return new Intl.DateTimeFormat('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(a[0],a[1]-1,a[2]))}
+  function dateText(s){const a=s.split('-').map(Number);return new Intl.DateTimeFormat('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(a[0],a[1]-1,a[2]))}
 
   function render(){
     const spent=totalSpent();
@@ -300,7 +308,7 @@
 
     $('remaining').textContent=money(remain);
     $('budgetProgress').style.width=pct+'%';
-    $('spentText').textContent='Потрачено '+money(spent)+' из '+money(state.budget);
+    $('spentText').textContent='Витрачено '+money(spent)+' із '+money(state.budget);
     $('daysLeft').textContent=days+' '+dayWord(days);
     $('dailySafe').textContent=money(daily);
     $('weeklySafe').textContent=money(weekly);
@@ -310,16 +318,16 @@
 
     const pace=$('paceMessage');
     pace.className='status';
-    if(remain<0){pace.classList.add('bad');pace.textContent='Свободный бюджет превышен на '+money(Math.abs(remain))+'. Безопасный лимит сейчас — 0 €.'}
-    else if(state.expenses.length){pace.textContent='После каждой траты оставшиеся деньги автоматически перераспределяются на '+days+' '+dayWord(days)+'.'}
-    else pace.textContent='Добавь первую трату — лимиты пересчитаются автоматически.';
+    if(remain<0){pace.classList.add('bad');pace.textContent='Вільний бюджет перевищено на '+money(Math.abs(remain))+'. Безпечний ліміт зараз — 0 €.'}
+    else if(state.expenses.length){pace.textContent='Після кожної витрати залишок грошей автоматично перерозподіляється на '+days+' '+dayWord(days)+'.'}
+    else pace.textContent='Додайте першу витрату — ліміти буде перераховано автоматично.';
 
     $('debtDisplay').textContent=money(state.debt);
-    $('debtPlanText').textContent=state.debt<=0?'Долг закрыт.':'Плановый платёж: '+money(state.debtPayment);
+    $('debtPlanText').textContent=state.debt<=0?'Борг закрито.':'Плановий платіж: '+money(state.debtPayment);
     $('debtInput').value=state.debt;
     $('debtPaymentInput').value=state.debtPayment;
     const actualPay=Math.min(state.debt,state.debtPayment);
-    $('payDebt').textContent=state.debt<=0?'Долг закрыт':'Внести платёж '+money(actualPay);
+    $('payDebt').textContent=state.debt<=0?'Борг закрито':'Внести платіж '+money(actualPay);
     $('payDebt').disabled=state.debt<=0||state.debtPayment<=0;
 
     const totals=Object.fromEntries(CATS.map(c=>[c,0]));
@@ -329,10 +337,10 @@
 
     const ordered=[...state.expenses].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
     const rows=showAll?ordered:ordered.slice(0,6);
-    $('toggleAll').textContent=showAll?'Скрыть':'Показать все';
-    $('expenseList').innerHTML=rows.length?rows.map(e=>'<div class="tx"><div><div class="txTitle">'+esc(e.category)+(e.comment?' · '+esc(e.comment):'')+'</div><div class="txMeta">'+dateText(e.date)+'</div></div><div class="txAmount">'+money(num(e.amount))+'</div><button class="xBtn" data-del="'+esc(e.id)+'" type="button" aria-label="Удалить">×</button></div>').join(''):'<div class="empty">Расходов пока нет.</div>';
+    $('toggleAll').textContent=showAll?'Скрыть':'Показати все';
+    $('expenseList').innerHTML=rows.length?rows.map(e=>'<div class="tx"><div><div class="txTitle">'+esc(e.category)+(e.comment?' · '+esc(e.comment):'')+'</div><div class="txMeta">'+dateText(e.date)+'</div></div><div class="txAmount">'+money(num(e.amount))+'</div><button class="xBtn" data-del="'+esc(e.id)+'" type="button" aria-label="Видалити">×</button></div>').join(''):'<div class="empty">Расходов пока нет.</div>';
     document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
-      if(confirm('Удалить эту запись?')){state.expenses=state.expenses.filter(e=>e.id!==b.dataset.del);save();render();toast('Расход удалён')}
+      if(confirm('Видалити цей запис?')){state.expenses=state.expenses.filter(e=>e.id!==b.dataset.del);save();render();toast('Витрату видалено')}
     }));
   }
 
@@ -351,13 +359,13 @@
   $('expenseForm').addEventListener('submit',e=>{
     e.preventDefault();
     const amount=num($('amount').value);
-    if(amount<=0){toast('Введите сумму больше нуля');return}
+    if(amount<=0){toast('Введіть суму більше нуля');return}
     state.expenses.push({
       id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),
       amount,category:$('category').value,date:$('expenseDate').value||ymd(today()),
       comment:$('comment').value.trim(),createdAt:Date.now()
     });
-    $('amount').value='';$('comment').value='';save();render();closeExpenseModal();toast('Расход добавлен');
+    $('amount').value='';$('comment').value='';save();render();closeExpenseModal();toast('Витрату додано');
   });
 
   $('payday').addEventListener('change',()=>{if($('payday').value){state.payday=$('payday').value;save();render()}});
@@ -366,15 +374,15 @@
   $('saveDebt').addEventListener('click',()=>{
     state.debt=Math.max(0,num($('debtInput').value));
     state.debtPayment=Math.max(0,num($('debtPaymentInput').value));
-    save();render();toast('Суммы сохранены');
+    save();render();toast('Суми збережено');
   });
 
   $('payDebt').addEventListener('click',()=>{
     state.debt=Math.max(0,num($('debtInput').value));
     state.debtPayment=Math.max(0,num($('debtPaymentInput').value));
     const p=Math.min(state.debt,state.debtPayment);
-    if(p<=0){toast('Укажи сумму платежа');return}
-    $('modalText').textContent='Подтвердить платёж '+money(p)+' на рабочий счёт? После подтверждения остаток долга уменьшится.';
+    if(p<=0){toast('Вкажіть суму платежу');return}
+    $('modalText').textContent='Підтвердити платёж '+money(p)+' на рабочий счёт? После подтверждения остаток долга уменьшится.';
     $('confirmModal').classList.add('show');
   });
   $('cancelPayment').addEventListener('click',()=>$('confirmModal').classList.remove('show'));
@@ -382,17 +390,17 @@
   $('confirmPayment').addEventListener('click',()=>{
     const p=Math.min(state.debt,state.debtPayment);
     state.debt=Math.max(0,state.debt-p);
-    save();$('confirmModal').classList.remove('show');render();toast('Платёж учтён: '+money(p));
+    save();$('confirmModal').classList.remove('show');render();toast('Платіж враховано: '+money(p));
   });
 
   $('saveSettings').addEventListener('click',()=>{
     state.budget=Math.max(0,num($('budgetInput').value));
     if($('settingsPayday').value)state.payday=$('settingsPayday').value;
-    save();render();toast('Настройки сохранены');
+    save();render();toast('Налаштування збережено');
   });
 
   $('clearExpenses').addEventListener('click',()=>{
-    if(confirm('Удалить все внесённые расходы?')){state.expenses=[];save();render();toast('Расходы очищены')}
+    if(confirm('Видалити всі внесені витрати?')){state.expenses=[];save();render();toast('Витрати очищено')}
   });
 
   $('exportBtn').addEventListener('click',()=>{
@@ -406,17 +414,17 @@
     try{
       const v=JSON.parse(await f.text());
       if(!v||!Array.isArray(v.expenses))throw new Error();
-      state={budget:Math.max(0,num(v.budget)),payday:v.payday||defaultPayday(),debt:Math.max(0,num(v.debt)),debtPayment:Math.max(0,num(v.debtPayment)),expenses:v.expenses};
-      save();render();toast('Резервная копия загружена');
-    }catch(e){toast('Не удалось прочитать файл')}
+      state={budget:Math.max(0,num(v.budget)),payday:v.payday||defaultPayday(),debt:Math.max(0,num(v.debt)),debtPayment:Math.max(0,num(v.debtPayment)),expenses:v.expenses.map(e=>({...e,category:normalizeCategory(e.category)}))};
+      save();render();toast('Резервну копію завантажено');
+    }catch(e){toast('Не вдалося прочитати файл')}
     $('importFile').value='';
   });
 
   load();
   $('expenseDate').value=ymd(today());
-  $('todayLabel').textContent=new Intl.DateTimeFormat('ru-RU',{day:'2-digit',month:'long'}).format(today());
+  $('todayLabel').textContent=new Intl.DateTimeFormat('uk-UA',{day:'2-digit',month:'long'}).format(today());
   render();
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=3').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=4').catch(()=>{}));
 })();
 </script>
 </body>
