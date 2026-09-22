@@ -68,6 +68,11 @@
     .modalTop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
     .modalTop h2{margin:0}
     .modalClose{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:22px;line-height:1}
+    .categoryManageModal{width:min(520px,100%);max-height:min(82vh,720px);overflow:auto}
+    .categoryEditorList{display:grid;gap:9px;margin-top:6px}
+    .categoryEditorRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+    .categoryAddBox{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+    .categoryAddRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:7px}
     .cat{margin:12px 0}
     .catTop{display:flex;justify-content:space-between;gap:10px;font-size:14px}
     .catBar{height:7px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:6px}
@@ -165,7 +170,10 @@
 
   <section class="grid g22 section">
     <div class="card">
-      <div class="sectionHead">За категоріями</div>
+      <div class="payRow">
+        <div class="sectionHead" style="margin:0">За категоріями</div>
+        <button class="btn secondary smallBtn" id="openCategoryManager" type="button">Редагувати категорії</button>
+      </div>
       <div id="categoryStats"></div>
     </div>
     <div class="card">
@@ -242,13 +250,7 @@
         </div>
         <div class="field">
           <label for="category">Категорія</label>
-          <select id="category">
-            <option>Їжа/вода</option>
-            <option>Бензин</option>
-            <option>Нікотин</option>
-            <option>Розваги</option>
-            <option>Інше</option>
-          </select>
+          <select id="category"></select>
         </div>
         <div class="field">
           <label for="expenseDate">Дата</label>
@@ -261,6 +263,26 @@
       </div>
       <button class="btn addBtn" id="expenseSubmit" type="submit">Додати витрату</button>
     </form>
+  </div>
+</div>
+
+<div class="modalBack" id="categoryManagerModal" role="dialog" aria-modal="true" aria-labelledby="categoryManagerTitle">
+  <div class="modal categoryManageModal">
+    <div class="modalTop">
+      <h2 id="categoryManagerTitle">Редагувати категорії</h2>
+      <button class="modalClose" id="closeCategoryManager" type="button" aria-label="Закрити">×</button>
+    </div>
+    <div class="categoryEditorList" id="categoryEditorList"></div>
+    <div class="categoryAddBox">
+      <div class="field">
+        <label for="newCategoryName">Нова категорія</label>
+        <div class="categoryAddRow">
+          <input id="newCategoryName" maxlength="40" placeholder="Наприклад, Кафе">
+          <button class="btn" id="addCategoryBtn" type="button">Додати</button>
+        </div>
+      </div>
+    </div>
+    <div class="note">Після перейменування категорії всі старі витрати з цією категорією також отримають нову назву.</div>
   </div>
 </div>
 
@@ -280,7 +302,7 @@
 (() => {
   const KEY='budget-control-v2';
   const UNDO_KEY='budget-control-undo-v1';
-  const CATS=['Їжа/вода','Бензин','Нікотин','Розваги','Інше'];
+  const DEFAULT_CATS=['Їжа/вода','Бензин','Нікотин','Розваги','Інше'];
   const CATEGORY_MAP={
     'Еда/вода':'Їжа/вода','Їжа/вода':'Їжа/вода',
     'Бензин':'Бензин',
@@ -297,8 +319,22 @@
   const defaultPayday=()=>{const d=today();d.setDate(d.getDate()+30);return ymd(d)};
   const utc=s=>{const a=String(s).split('-').map(Number);return Date.UTC(a[0],a[1]-1,a[2])};
   const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const cleanCategories=list=>{
+    const out=[];
+    (Array.isArray(list)?list:[]).forEach(v=>{
+      const name=String(normalizeCategory(v)||'').trim();
+      if(name&&!out.some(x=>x.toLocaleLowerCase('uk-UA')===name.toLocaleLowerCase('uk-UA')))out.push(name);
+    });
+    return out;
+  };
+  const getCats=()=>state.categories&&state.categories.length?state.categories:DEFAULT_CATS;
+  function renderCategorySelect(selected){
+    const cats=getCats();
+    $('category').innerHTML=cats.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+    $('category').value=cats.includes(selected)?selected:cats[0];
+  }
 
-  let state={budget:435,payday:defaultPayday(),debt:1700,debtPayment:425,expenses:[]};
+  let state={budget:435,payday:defaultPayday(),debt:1700,debtPayment:425,categories:[...DEFAULT_CATS],expenses:[]};
   let showAll=false;
   let editingExpenseId=null;
 
@@ -311,6 +347,9 @@
       state.debt=Math.max(0,num(v.debt));
       state.debtPayment=Math.max(0,num(v.debtPayment));
       state.expenses=Array.isArray(v.expenses)?v.expenses.filter(e=>e&&num(e.amount)>0).map(e=>({...e,category:normalizeCategory(e.category)})):[];
+      const savedCats=Array.isArray(v.categories)?v.categories:DEFAULT_CATS;
+      state.categories=cleanCategories([...savedCats,...state.expenses.map(e=>e.category)]);
+      if(!state.categories.length)state.categories=[...DEFAULT_CATS];
     }catch(e){}
   }
   const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
@@ -334,9 +373,14 @@
         payday:v.payday||defaultPayday(),
         debt:Math.max(0,num(v.debt)),
         debtPayment:Math.max(0,num(v.debtPayment)),
+        categories:cleanCategories(Array.isArray(v.categories)?v.categories:DEFAULT_CATS),
         expenses:Array.isArray(v.expenses)?v.expenses.map(e=>({...e,category:normalizeCategory(e.category)})):[]
       };
-      localStorage.removeItem(UNDO_KEY);save();render();toast('Останню дію скасовано');
+      state.categories=cleanCategories([...state.categories,...state.expenses.map(e=>e.category)]);
+      if(!state.categories.length)state.categories=[...DEFAULT_CATS];
+      localStorage.removeItem(UNDO_KEY);save();render();
+      if($('categoryManagerModal').classList.contains('show'))renderCategoryEditor();
+      toast('Останню дію скасовано');
     }catch(e){}
   }
   function dateText(s){const a=s.split('-').map(Number);return new Intl.DateTimeFormat('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(a[0],a[1]-1,a[2]))}
@@ -375,10 +419,11 @@
     $('payDebt').textContent=state.debt<=0?'Борг закрито':'Внести платіж '+money(actualPay);
     $('payDebt').disabled=state.debt<=0||state.debtPayment<=0;
 
-    const totals=Object.fromEntries(CATS.map(c=>[c,0]));
-    state.expenses.forEach(e=>{if(totals[e.category]!==undefined)totals[e.category]+=num(e.amount)});
+    const cats=getCats();
+    const totals=Object.fromEntries(cats.map(c=>[c,0]));
+    state.expenses.forEach(e=>{if(totals[e.category]===undefined)totals[e.category]=0;totals[e.category]+=num(e.amount)});
     const max=Math.max(1,...Object.values(totals));
-    $('categoryStats').innerHTML=CATS.map(c=>'<div class="cat"><div class="catTop"><span>'+esc(c)+'</span><strong>'+money(totals[c])+'</strong></div><div class="catBar"><span style="width:'+(totals[c]/max*100)+'%"></span></div></div>').join('');
+    $('categoryStats').innerHTML=cats.map(c=>'<div class="cat"><div class="catTop"><span>'+esc(c)+'</span><strong>'+money(totals[c]||0)+'</strong></div><div class="catBar"><span style="width:'+((totals[c]||0)/max*100)+'%"></span></div></div>').join('');
 
     const todayKey=ymd(today());
     const sevenStart=new Date(today());sevenStart.setDate(sevenStart.getDate()-6);
@@ -412,12 +457,56 @@
     }));
   }
 
+  function renderCategoryEditor(){
+    const cats=getCats();
+    $('categoryEditorList').innerHTML=cats.map((name,i)=>
+      '<div class="categoryEditorRow"><input data-cat-input="'+i+'" maxlength="40" value="'+esc(name)+'"><button class="btn secondary smallBtn" data-cat-save="'+i+'" type="button">Зберегти</button></div>'
+    ).join('');
+    document.querySelectorAll('[data-cat-save]').forEach(btn=>btn.addEventListener('click',()=>renameCategory(Number(btn.dataset.catSave))));
+    document.querySelectorAll('[data-cat-input]').forEach(inp=>inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();renameCategory(Number(inp.dataset.catInput))}}));
+  }
+  function openCategoryManager(){
+    renderCategoryEditor();
+    $('newCategoryName').value='';
+    $('categoryManagerModal').classList.add('show');
+  }
+  function closeCategoryManager(){$('categoryManagerModal').classList.remove('show')}
+  function renameCategory(index){
+    const input=document.querySelector('[data-cat-input="'+index+'"]');if(!input)return;
+    const newName=input.value.trim();
+    const cats=getCats();
+    const oldName=cats[index];
+    if(!newName){toast('Назва категорії не може бути порожньою');return}
+    if(cats.some((x,i)=>i!==index&&x.toLocaleLowerCase('uk-UA')===newName.toLocaleLowerCase('uk-UA'))){toast('Така категорія вже існує');return}
+    if(newName===oldName)return;
+    snapshotUndo();
+    state.categories=[...cats];
+    state.categories[index]=newName;
+    state.expenses=state.expenses.map(e=>e.category===oldName?{...e,category:newName}:e);
+    save();render();renderCategoryEditor();toast('Категорію перейменовано',true);
+  }
+  function addCategory(){
+    const newName=$('newCategoryName').value.trim();
+    const cats=getCats();
+    if(!newName){toast('Введіть назву нової категорії');return}
+    if(cats.some(x=>x.toLocaleLowerCase('uk-UA')===newName.toLocaleLowerCase('uk-UA'))){toast('Така категорія вже існує');return}
+    snapshotUndo();
+    state.categories=[...cats,newName];
+    $('newCategoryName').value='';
+    save();render();renderCategoryEditor();toast('Категорію додано',true);
+  }
+  $('openCategoryManager').addEventListener('click',openCategoryManager);
+  $('closeCategoryManager').addEventListener('click',closeCategoryManager);
+  $('categoryManagerModal').addEventListener('click',e=>{if(e.target===$('categoryManagerModal'))closeCategoryManager()});
+  $('addCategoryBtn').addEventListener('click',addCategory);
+  $('newCategoryName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCategory()}});
+
   function openExpenseModal(){
     editingExpenseId=null;
     $('expenseModalTitle').textContent='Додати витрату';
     $('expenseSubmit').textContent='Додати витрату';
     $('amount').value='';
-    $('category').value=CATS[0];
+    renderCategorySelect();
     $('expenseDate').value=ymd(today());
     $('comment').value='';
     $('expenseModal').classList.add('show');
@@ -429,7 +518,7 @@
     $('expenseModalTitle').textContent='Редагувати витрату';
     $('expenseSubmit').textContent='Зберегти зміни';
     $('amount').value=String(num(e.amount)).replace('.',',');
-    $('category').value=normalizeCategory(e.category);
+    renderCategorySelect(normalizeCategory(e.category));
     $('expenseDate').value=e.date||ymd(today());
     $('comment').value=e.comment||'';
     $('expenseModal').classList.add('show');
@@ -509,7 +598,16 @@
       const v=JSON.parse(await f.text());
       if(!v||!Array.isArray(v.expenses))throw new Error();
       snapshotUndo();
-      state={budget:Math.max(0,num(v.budget)),payday:v.payday||defaultPayday(),debt:Math.max(0,num(v.debt)),debtPayment:Math.max(0,num(v.debtPayment)),expenses:v.expenses.map(e=>({...e,category:normalizeCategory(e.category)}))};
+      const importedExpenses=v.expenses.map(e=>({...e,category:normalizeCategory(e.category)}));
+      state={
+        budget:Math.max(0,num(v.budget)),
+        payday:v.payday||defaultPayday(),
+        debt:Math.max(0,num(v.debt)),
+        debtPayment:Math.max(0,num(v.debtPayment)),
+        categories:cleanCategories([...(Array.isArray(v.categories)?v.categories:DEFAULT_CATS),...importedExpenses.map(e=>e.category)]),
+        expenses:importedExpenses
+      };
+      if(!state.categories.length)state.categories=[...DEFAULT_CATS];
       save();render();toast('Резервну копію завантажено',true);
     }catch(e){toast('Не вдалося прочитати файл')}
     $('importFile').value='';
@@ -518,8 +616,9 @@
   $('undoAction').addEventListener('click',undoLast);
   load();
   $('expenseDate').value=ymd(today());
+  renderCategorySelect();
   render();
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=6').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=7').catch(()=>{}));
 })();
 </script>
 </body>
