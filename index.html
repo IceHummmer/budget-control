@@ -299,6 +299,7 @@
   function dateText(s){const a=s.split('-').map(Number);return new Intl.DateTimeFormat('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(a[0],a[1]-1,a[2]))}
 
   function render(){
+    $('todayLabel').textContent=new Intl.DateTimeFormat('uk-UA',{day:'2-digit',month:'long'}).format(today());
     const spent=totalSpent();
     const remain=state.budget-spent;
     const days=daysLeft();
@@ -345,7 +346,7 @@
   }
 
   function openExpenseModal(){
-    $('expenseDate').value=$('expenseDate').value||ymd(today());
+    $('expenseDate').value=ymd(today());
     $('expenseModal').classList.add('show');
     setTimeout(()=>$('amount').focus(),120);
   }
@@ -422,9 +423,8 @@
 
   load();
   $('expenseDate').value=ymd(today());
-  $('todayLabel').textContent=new Intl.DateTimeFormat('uk-UA',{day:'2-digit',month:'long'}).format(today());
   render();
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=4').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=5').catch(()=>{}));
 })();
 </script>
 </body>
