@@ -72,12 +72,18 @@
     .catTop{display:flex;justify-content:space-between;gap:10px;font-size:14px}
     .catBar{height:7px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:6px}
     .catBar span{height:100%;display:block;background:var(--green2);border-radius:999px}
-    .tx{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+    .statsGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    .statBox{padding:13px;border:1px solid var(--line);border-radius:14px;background:var(--soft)}
+    .statLabel{font-size:12px;color:var(--muted);margin-bottom:5px}
+    .statValue{font-size:20px;font-weight:760;letter-spacing:-.02em}
+    .dateHeader{font-size:12px;font-weight:760;color:var(--muted);padding:14px 0 5px;text-transform:capitalize}
+    .tx{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
     .tx:last-child{border-bottom:0}
     .txTitle{font-weight:690;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .txMeta{font-size:12px;color:var(--muted);margin-top:3px}
     .txAmount{font-weight:760;white-space:nowrap}
     .xBtn{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:19px}
+    .editBtn{font-size:16px}
     .empty{color:var(--muted);font-size:13px;padding:10px 0}
     .debt{margin-top:12px;border-color:#c8d8d1}
     .debtHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -94,11 +100,14 @@
     .modal p{font-size:14px;color:var(--muted);line-height:1.5;margin:0}
     .modalActions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
     .toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translate(-50%,12px);
-      background:#17251f;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:20}
-    .toast.show{opacity:1;transform:translate(-50%,0)}
+      background:#17251f;color:#fff;padding:10px 12px 10px 14px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:20;
+      display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px)}
+    .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+    .undoBtn{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:7px 10px;font-weight:750;white-space:nowrap}
     .hide{display:none!important}
     @media(max-width:720px){
       .g2,.g22,.fields,.debtFields,.settingsGrid,.expenseModal .fields{grid-template-columns:1fr}
+      .statsGrid{grid-template-columns:1fr 1fr}
       .moneyBig{font-size:31px}
       .app{padding-left:12px;padding-right:12px}
       .card{padding:16px}
@@ -141,6 +150,17 @@
       <div><span class="safeValue" id="weeklySafe">101,50 €</span><span class="safeUnit">на наступні 7 днів</span></div>
     </div>
     <div class="status" id="paceMessage">Додайте першу витрату — ліміти буде перераховано автоматично.</div>
+  </section>
+
+  <section class="card section">
+    <div class="sectionHead">Статистика за період</div>
+    <div class="statsGrid">
+      <div class="statBox"><div class="statLabel">Всього витрачено</div><div class="statValue" id="statTotal">0,00 €</div></div>
+      <div class="statBox"><div class="statLabel">За останні 7 днів</div><div class="statValue" id="stat7">0,00 €</div></div>
+      <div class="statBox"><div class="statLabel">Середньо на день</div><div class="statValue" id="statDaily">0,00 €</div></div>
+      <div class="statBox"><div class="statLabel">Найбільша категорія</div><div class="statValue" id="statTop">—</div></div>
+    </div>
+    <div class="note" id="statPeriodText">Період ще не розпочато.</div>
   </section>
 
   <section class="grid g22 section">
@@ -239,7 +259,7 @@
           <input id="comment" maxlength="100" placeholder="Необов’язково">
         </div>
       </div>
-      <button class="btn addBtn" type="submit">Додати витрату</button>
+      <button class="btn addBtn" id="expenseSubmit" type="submit">Додати витрату</button>
     </form>
   </div>
 </div>
@@ -254,11 +274,12 @@
     </div>
   </div>
 </div>
-<div class="toast" id="toast" aria-live="polite"></div>
+<div class="toast" id="toast" aria-live="polite"><span id="toastText"></span><button class="undoBtn hide" id="undoAction" type="button">Скасувати</button></div>
 
 <script>
 (() => {
   const KEY='budget-control-v2';
+  const UNDO_KEY='budget-control-undo-v1';
   const CATS=['Їжа/вода','Бензин','Нікотин','Розваги','Інше'];
   const CATEGORY_MAP={
     'Еда/вода':'Їжа/вода','Їжа/вода':'Їжа/вода',
@@ -279,6 +300,7 @@
 
   let state={budget:435,payday:defaultPayday(),debt:1700,debtPayment:425,expenses:[]};
   let showAll=false;
+  let editingExpenseId=null;
 
   function load(){
     try{
@@ -295,8 +317,30 @@
   const totalSpent=()=>state.expenses.reduce((s,e)=>s+num(e.amount),0);
   const daysLeft=()=>Math.max(1,Math.ceil((utc(state.payday)-utc(ymd(today())))/86400000));
   function dayWord(n){const a=n%10,b=n%100;if(a===1&&b!==11)return'день';if(a>=2&&a<=4&&!(b>=12&&b<=14))return'дні';return'днів'}
-  function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.remove('show'),1800)}
+  function snapshotUndo(){localStorage.setItem(UNDO_KEY,JSON.stringify(state))}
+  function toast(t,canUndo=false){
+    $('toastText').textContent=t;
+    $('undoAction').classList.toggle('hide',!canUndo);
+    $('toast').classList.add('show');
+    clearTimeout(toast.t);
+    toast.t=setTimeout(()=>$('toast').classList.remove('show'),canUndo?4500:1800);
+  }
+  function undoLast(){
+    try{
+      const v=JSON.parse(localStorage.getItem(UNDO_KEY));
+      if(!v)return;
+      state={
+        budget:Math.max(0,num(v.budget)),
+        payday:v.payday||defaultPayday(),
+        debt:Math.max(0,num(v.debt)),
+        debtPayment:Math.max(0,num(v.debtPayment)),
+        expenses:Array.isArray(v.expenses)?v.expenses.map(e=>({...e,category:normalizeCategory(e.category)})):[]
+      };
+      localStorage.removeItem(UNDO_KEY);save();render();toast('Останню дію скасовано');
+    }catch(e){}
+  }
   function dateText(s){const a=s.split('-').map(Number);return new Intl.DateTimeFormat('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(a[0],a[1]-1,a[2]))}
+  function groupDateText(s){const a=s.split('-').map(Number);return new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'long',year:'numeric'}).format(new Date(a[0],a[1]-1,a[2]))}
 
   function render(){
     $('todayLabel').textContent=new Intl.DateTimeFormat('uk-UA',{day:'2-digit',month:'long'}).format(today());
@@ -336,22 +380,64 @@
     const max=Math.max(1,...Object.values(totals));
     $('categoryStats').innerHTML=CATS.map(c=>'<div class="cat"><div class="catTop"><span>'+esc(c)+'</span><strong>'+money(totals[c])+'</strong></div><div class="catBar"><span style="width:'+(totals[c]/max*100)+'%"></span></div></div>').join('');
 
-    const ordered=[...state.expenses].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const todayKey=ymd(today());
+    const sevenStart=new Date(today());sevenStart.setDate(sevenStart.getDate()-6);
+    const sevenStartKey=ymd(sevenStart);
+    const spent7=state.expenses.filter(e=>e.date>=sevenStartKey&&e.date<=todayKey).reduce((s,e)=>s+num(e.amount),0);
+    const dated=state.expenses.filter(e=>e.date).map(e=>e.date).sort();
+    const firstDate=dated[0]||todayKey;
+    const periodDays=Math.max(1,Math.floor((utc(todayKey)-utc(firstDate))/86400000)+1);
+    const topEntry=Object.entries(totals).sort((a,b)=>b[1]-a[1])[0];
+    $('statTotal').textContent=money(spent);
+    $('stat7').textContent=money(spent7);
+    $('statDaily').textContent=money(state.expenses.length?spent/periodDays:0);
+    $('statTop').textContent=topEntry&&topEntry[1]>0?topEntry[0]:'—';
+    $('statPeriodText').textContent=state.expenses.length?'Період: '+groupDateText(firstDate)+' — '+groupDateText(todayKey):'Період ще не розпочато.';
+
+    const ordered=[...state.expenses].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||((b.createdAt||0)-(a.createdAt||0)));
     const rows=showAll?ordered:ordered.slice(0,6);
-    $('toggleAll').textContent=showAll?'Скрыть':'Показати все';
-    $('expenseList').innerHTML=rows.length?rows.map(e=>'<div class="tx"><div><div class="txTitle">'+esc(e.category)+(e.comment?' · '+esc(e.comment):'')+'</div><div class="txMeta">'+dateText(e.date)+'</div></div><div class="txAmount">'+money(num(e.amount))+'</div><button class="xBtn" data-del="'+esc(e.id)+'" type="button" aria-label="Видалити">×</button></div>').join(''):'<div class="empty">Витрат поки немає.</div>';
+    $('toggleAll').textContent=showAll?'Сховати':'Показати все';
+    if(rows.length){
+      let history='',lastDate='';
+      rows.forEach(e=>{
+        if(e.date!==lastDate){history+='<div class="dateHeader">'+esc(groupDateText(e.date))+'</div>';lastDate=e.date}
+        history+='<div class="tx"><div><div class="txTitle">'+esc(e.category)+(e.comment?' · '+esc(e.comment):'')+'</div><div class="txMeta">'+dateText(e.date)+'</div></div><div class="txAmount">'+money(num(e.amount))+'</div><button class="xBtn editBtn" data-edit="'+esc(e.id)+'" type="button" aria-label="Редагувати">✎</button><button class="xBtn" data-del="'+esc(e.id)+'" type="button" aria-label="Видалити">×</button></div>';
+      });
+      $('expenseList').innerHTML=history;
+    } else $('expenseList').innerHTML='<div class="empty">Витрат поки немає.</div>';
+
+    document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEditExpenseModal(b.dataset.edit)));
     document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
-      if(confirm('Видалити цей запис?')){state.expenses=state.expenses.filter(e=>e.id!==b.dataset.del);save();render();toast('Витрату видалено')}
+      if(confirm('Видалити цей запис?')){snapshotUndo();state.expenses=state.expenses.filter(e=>e.id!==b.dataset.del);save();render();toast('Витрату видалено',true)}
     }));
   }
 
   function openExpenseModal(){
+    editingExpenseId=null;
+    $('expenseModalTitle').textContent='Додати витрату';
+    $('expenseSubmit').textContent='Додати витрату';
+    $('amount').value='';
+    $('category').value=CATS[0];
     $('expenseDate').value=ymd(today());
+    $('comment').value='';
+    $('expenseModal').classList.add('show');
+    setTimeout(()=>$('amount').focus(),120);
+  }
+  function openEditExpenseModal(id){
+    const e=state.expenses.find(x=>x.id===id);if(!e)return;
+    editingExpenseId=id;
+    $('expenseModalTitle').textContent='Редагувати витрату';
+    $('expenseSubmit').textContent='Зберегти зміни';
+    $('amount').value=String(num(e.amount)).replace('.',',');
+    $('category').value=normalizeCategory(e.category);
+    $('expenseDate').value=e.date||ymd(today());
+    $('comment').value=e.comment||'';
     $('expenseModal').classList.add('show');
     setTimeout(()=>$('amount').focus(),120);
   }
   function closeExpenseModal(){
     $('expenseModal').classList.remove('show');
+    editingExpenseId=null;
   }
   $('openExpenseModal').addEventListener('click',openExpenseModal);
   $('closeExpenseModal').addEventListener('click',closeExpenseModal);
@@ -361,21 +447,26 @@
     e.preventDefault();
     const amount=num($('amount').value);
     if(amount<=0){toast('Введіть суму більше нуля');return}
-    state.expenses.push({
-      id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),
-      amount,category:$('category').value,date:$('expenseDate').value||ymd(today()),
-      comment:$('comment').value.trim(),createdAt:Date.now()
-    });
-    $('amount').value='';$('comment').value='';save();render();closeExpenseModal();toast('Витрату додано');
+    const payload={amount,category:$('category').value,date:$('expenseDate').value||ymd(today()),comment:$('comment').value.trim()};
+    snapshotUndo();
+    if(editingExpenseId){
+      const i=state.expenses.findIndex(x=>x.id===editingExpenseId);
+      if(i>=0)state.expenses[i]={...state.expenses[i],...payload};
+      save();render();closeExpenseModal();toast('Витрату оновлено',true);
+    }else{
+      state.expenses.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),...payload,createdAt:Date.now()});
+      save();render();closeExpenseModal();toast('Витрату додано',true);
+    }
   });
 
-  $('payday').addEventListener('change',()=>{if($('payday').value){state.payday=$('payday').value;save();render()}});
+  $('payday').addEventListener('change',()=>{if($('payday').value){snapshotUndo();state.payday=$('payday').value;save();render();toast('Дату зарплати змінено',true)}});
   $('toggleAll').addEventListener('click',()=>{showAll=!showAll;render()});
 
   $('saveDebt').addEventListener('click',()=>{
+    snapshotUndo();
     state.debt=Math.max(0,num($('debtInput').value));
     state.debtPayment=Math.max(0,num($('debtPaymentInput').value));
-    save();render();toast('Суми збережено');
+    save();render();toast('Суми збережено',true);
   });
 
   $('payDebt').addEventListener('click',()=>{
@@ -383,25 +474,27 @@
     state.debtPayment=Math.max(0,num($('debtPaymentInput').value));
     const p=Math.min(state.debt,state.debtPayment);
     if(p<=0){toast('Вкажіть суму платежу');return}
-    $('modalText').textContent='Підтвердити платёж '+money(p)+' на рабочий счёт? После подтверждения остаток долга уменьшится.';
+    $('modalText').textContent='Підтвердити платіж '+money(p)+' на робочий рахунок? Після підтвердження залишок боргу зменшиться.';
     $('confirmModal').classList.add('show');
   });
   $('cancelPayment').addEventListener('click',()=>$('confirmModal').classList.remove('show'));
   $('confirmModal').addEventListener('click',e=>{if(e.target===$('confirmModal'))$('confirmModal').classList.remove('show')});
   $('confirmPayment').addEventListener('click',()=>{
     const p=Math.min(state.debt,state.debtPayment);
+    snapshotUndo();
     state.debt=Math.max(0,state.debt-p);
-    save();$('confirmModal').classList.remove('show');render();toast('Платіж враховано: '+money(p));
+    save();$('confirmModal').classList.remove('show');render();toast('Платіж враховано: '+money(p),true);
   });
 
   $('saveSettings').addEventListener('click',()=>{
+    snapshotUndo();
     state.budget=Math.max(0,num($('budgetInput').value));
     if($('settingsPayday').value)state.payday=$('settingsPayday').value;
-    save();render();toast('Налаштування збережено');
+    save();render();toast('Налаштування збережено',true);
   });
 
   $('clearExpenses').addEventListener('click',()=>{
-    if(confirm('Видалити всі внесені витрати?')){state.expenses=[];save();render();toast('Витрати очищено')}
+    if(confirm('Видалити всі внесені витрати?')){snapshotUndo();state.expenses=[];save();render();toast('Витрати очищено',true)}
   });
 
   $('exportBtn').addEventListener('click',()=>{
@@ -415,16 +508,18 @@
     try{
       const v=JSON.parse(await f.text());
       if(!v||!Array.isArray(v.expenses))throw new Error();
+      snapshotUndo();
       state={budget:Math.max(0,num(v.budget)),payday:v.payday||defaultPayday(),debt:Math.max(0,num(v.debt)),debtPayment:Math.max(0,num(v.debtPayment)),expenses:v.expenses.map(e=>({...e,category:normalizeCategory(e.category)}))};
-      save();render();toast('Резервну копію завантажено');
+      save();render();toast('Резервну копію завантажено',true);
     }catch(e){toast('Не вдалося прочитати файл')}
     $('importFile').value='';
   });
 
+  $('undoAction').addEventListener('click',undoLast);
   load();
   $('expenseDate').value=ymd(today());
   render();
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=5').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=6').catch(()=>{}));
 })();
 </script>
 </body>
