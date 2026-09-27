@@ -462,7 +462,7 @@
     :state.expenses;
   const totalSpent=()=>activeExpenses().reduce((s,e)=>s+num(e.amount),0);
   const mandatoryTotal=()=>state.monthlyPlan.mandatory.reduce((s,x)=>s+num(x.amount),0);
-  const debtReserve=()=>state.monthlyPlan.configured?Math.min(Math.max(0,state.debt),Math.max(0,state.debtPayment)):0;
+  const debtReserve=()=>state.monthlyPlan.configured?Math.max(0,state.debtPayment):0;
   const freeBudget=()=>state.monthlyPlan.configured
     ?state.monthlyPlan.salary-mandatoryTotal()-debtReserve()
     :state.budget;
@@ -528,7 +528,7 @@
     $('debtReserveSummary').textContent=plan.configured?money(debtReserve()):'—';
     $('freeBudgetSummary').textContent=money(baseBudget);
     $('monthlyPlanHint').textContent=plan.configured
-      ?'Доступний щоденний бюджет = зарплата − обов’язкові витрати − плановий платіж боргу.'
+      ?'Залишок на інші витрати = зарплата − обов’язкові витрати − плановий платіж боргу − вже внесені щоденні витрати.'
       :'Поки місячний план не збережено, використовується ваш старий вільний бюджет '+money(state.budget)+'. Існуючі дані не змінені.';
 
     const pace=$('paceMessage');
@@ -822,7 +822,7 @@
   $('expenseDate').value=ymd(today());
   renderCategorySelect();
   render();
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=8').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=9').catch(()=>{}));
 })();
 </script>
 </body>
