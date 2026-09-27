@@ -30,6 +30,15 @@
     .grid{display:grid;gap:12px}
     .g2{grid-template-columns:minmax(0,1.7fr) minmax(220px,.8fr)}
     .g22{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .monthlyStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+    .quickExpense{display:grid;grid-template-columns:minmax(120px,.65fr) minmax(150px,1fr) auto;gap:9px;align-items:end;margin-top:12px}
+    .quickExpense .btn{min-width:120px}
+    .dailyHead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .mandatoryList{display:grid;gap:9px;margin-top:10px}
+    .mandatoryRow{display:grid;grid-template-columns:minmax(0,1fr) 140px auto;gap:8px;align-items:end}
+    .monthlyPlanModal{width:min(600px,100%);max-height:min(86vh,760px);overflow:auto}
+    .monthlyPlanModal .fields{grid-template-columns:1fr 1fr}
+    .monthlyHint{margin-top:9px;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:12px;color:var(--muted);line-height:1.45}
     .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
     .cardTitle{font-size:13px;color:var(--muted);margin-bottom:7px}
     .moneyBig{font-size:34px;font-weight:800;letter-spacing:-.035em}
@@ -111,7 +120,11 @@
     .undoBtn{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:7px 10px;font-weight:750;white-space:nowrap}
     .hide{display:none!important}
     @media(max-width:720px){
-      .g2,.g22,.fields,.debtFields,.settingsGrid,.expenseModal .fields{grid-template-columns:1fr}
+      .g2,.g22,.fields,.debtFields,.settingsGrid,.expenseModal .fields,.monthlyPlanModal .fields{grid-template-columns:1fr}
+      .monthlyStats{grid-template-columns:1fr 1fr}
+      .quickExpense{grid-template-columns:1fr 1fr}
+      .quickExpense .btn{grid-column:1/-1}
+      .mandatoryRow{grid-template-columns:minmax(0,1fr) 120px auto}
       .statsGrid{grid-template-columns:1fr 1fr}
       .moneyBig{font-size:31px}
       .app{padding-left:12px;padding-right:12px}
@@ -149,6 +162,49 @@
   </section>
 
   <section class="card section">
+    <div class="dailyHead">
+      <div>
+        <div class="sectionHead" style="margin:0">Місячний план</div>
+        <div class="small" id="monthlyPlanPeriod">Ще не налаштовано</div>
+      </div>
+      <button class="btn secondary smallBtn" id="openMonthlyPlan" type="button">Редагувати</button>
+    </div>
+    <div class="monthlyStats">
+      <div class="statBox"><div class="statLabel">Зарплата</div><div class="statValue" id="salarySummary">—</div></div>
+      <div class="statBox"><div class="statLabel">Обов'язкові витрати</div><div class="statValue" id="mandatorySummary">—</div></div>
+      <div class="statBox"><div class="statLabel">Платіж боргу</div><div class="statValue" id="debtReserveSummary">—</div></div>
+      <div class="statBox"><div class="statLabel">На щоденні витрати</div><div class="statValue" id="freeBudgetSummary">—</div></div>
+    </div>
+    <div class="monthlyHint" id="monthlyPlanHint">Поки місячний план не збережено, застосунок продовжує використовувати ваш старий вільний бюджет без зміни вже внесених даних.</div>
+  </section>
+
+  <section class="card section">
+    <div class="dailyHead">
+      <div>
+        <div class="sectionHead" style="margin:0">Щоденні витрати</div>
+        <div class="small">Найшвидший спосіб додати звичайну витрату — сума, категорія, готово.</div>
+      </div>
+      <button class="btn secondary smallBtn" id="openDetailedExpense" type="button">Додати детально</button>
+    </div>
+    <form class="quickExpense" id="quickExpenseForm">
+      <div class="field">
+        <label for="quickAmount">Сума, €</label>
+        <input id="quickAmount" inputmode="decimal" placeholder="12,50" required>
+      </div>
+      <div class="field">
+        <label for="quickCategory">Категорія</label>
+        <select id="quickCategory"></select>
+      </div>
+      <button class="btn" type="submit">+ Додати</button>
+    </form>
+    <div class="payRow" style="margin-top:18px">
+      <div class="sectionHead" style="margin:0">Останні витрати</div>
+      <button class="btn secondary smallBtn" id="toggleAll" type="button">Показати все</button>
+    </div>
+    <div id="expenseList"></div>
+  </section>
+
+  <section class="card section">
     <div class="cardTitle">Безпечно витрачати</div>
     <div class="safeNumbers">
       <div><span class="safeValue" id="dailySafe">14,50 €</span><span class="safeUnit">на день</span></div>
@@ -168,21 +224,12 @@
     <div class="note" id="statPeriodText">Період ще не розпочато.</div>
   </section>
 
-  <section class="grid g22 section">
-    <div class="card">
-      <div class="payRow">
-        <div class="sectionHead" style="margin:0">За категоріями</div>
-        <button class="btn secondary smallBtn" id="openCategoryManager" type="button">Редагувати категорії</button>
-      </div>
-      <div id="categoryStats"></div>
+  <section class="card section">
+    <div class="payRow">
+      <div class="sectionHead" style="margin:0">За категоріями</div>
+      <button class="btn secondary smallBtn" id="openCategoryManager" type="button">Редагувати категорії</button>
     </div>
-    <div class="card">
-      <div class="payRow">
-        <div class="sectionHead" style="margin:0">Останні витрати</div>
-        <button class="btn secondary smallBtn" id="toggleAll" type="button">Показати все</button>
-      </div>
-      <div id="expenseList"></div>
-    </div>
+    <div id="categoryStats"></div>
   </section>
 
   <section class="card debt">
@@ -214,7 +261,7 @@
       <summary>Налаштування та резервна копія</summary>
       <div class="settingsGrid">
         <div class="field">
-          <label for="budgetInput">Вільний бюджет на період, €</label>
+          <label for="budgetInput">Старий вільний бюджет, €</label>
           <input id="budgetInput" inputmode="decimal">
         </div>
         <div class="field">
@@ -229,7 +276,7 @@
         <button class="btn danger smallBtn" id="clearExpenses" type="button">Очистити витрати</button>
         <input id="importFile" class="hide" type="file" accept="application/json">
       </div>
-      <div class="note">Дані зберігаються у браузері на цьому пристрої. Для перенесення на інший телефон використовуйте експорт та імпорт.</div>
+      <div class="note">Старий вільний бюджет використовується лише доки ви не збережете місячний план. Усі вже внесені дані залишаються у тому самому сховищі браузера. Для перенесення на інший телефон використовуйте експорт та імпорт.</div>
     </details>
   </section>
 </main>
@@ -263,6 +310,39 @@
       </div>
       <button class="btn addBtn" id="expenseSubmit" type="submit">Додати витрату</button>
     </form>
+  </div>
+</div>
+
+<div class="modalBack" id="monthlyPlanModal" role="dialog" aria-modal="true" aria-labelledby="monthlyPlanTitle">
+  <div class="modal monthlyPlanModal">
+    <div class="modalTop">
+      <h2 id="monthlyPlanTitle">Місячний план</h2>
+      <button class="modalClose" id="closeMonthlyPlan" type="button" aria-label="Закрити">×</button>
+    </div>
+    <div class="fields">
+      <div class="field">
+        <label for="planMonth">Місяць</label>
+        <input id="planMonth" type="month">
+      </div>
+      <div class="field">
+        <label for="salaryInput">Отримана зарплата, €</label>
+        <input id="salaryInput" inputmode="decimal" placeholder="0,00">
+      </div>
+    </div>
+    <div style="font-weight:760;margin-top:18px">Обов'язкові витрати</div>
+    <div class="small">Ці суми резервуються один раз на місяць. Не дублюйте їх у щоденних витратах.</div>
+    <div class="mandatoryList" id="mandatoryList"></div>
+    <div class="categoryAddBox">
+      <div class="small">Додати ще одну обов'язкову витрату</div>
+      <div class="categoryAddRow">
+        <input id="mandatoryName" maxlength="50" placeholder="Наприклад, страхування">
+        <button class="btn secondary" id="addMandatoryBtn" type="button">Додати</button>
+      </div>
+    </div>
+    <div class="modalActions">
+      <button class="btn secondary" id="cancelMonthlyPlan" type="button">Скасувати</button>
+      <button class="btn" id="saveMonthlyPlan" type="button">Зберегти план</button>
+    </div>
   </div>
 </div>
 
@@ -317,6 +397,24 @@
   const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const today=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())};
   const defaultPayday=()=>{const d=today();d.setDate(d.getDate()+30);return ymd(d)};
+  const currentMonth=()=>ymd(today()).slice(0,7);
+  const DEFAULT_MANDATORY=[
+    {id:'housing',name:'Проживання',amount:0},
+    {id:'food',name:'Харчування',amount:0},
+    {id:'parking',name:'Паркування',amount:0},
+    {id:'fuel',name:'Заправка',amount:0}
+  ];
+  const cloneMandatory=list=>(Array.isArray(list)&&list.length?list:DEFAULT_MANDATORY).map((x,i)=>({
+    id:String(x&&x.id||('mandatory-'+i+'-'+Date.now())),
+    name:String(x&&x.name||'').trim()||'Витрата',
+    amount:Math.max(0,num(x&&x.amount))
+  }));
+  const normalizeMonthlyPlan=v=>({
+    month:String(v&&v.month||currentMonth()).slice(0,7),
+    salary:Math.max(0,num(v&&v.salary)),
+    mandatory:cloneMandatory(v&&v.mandatory),
+    configured:!!(v&&v.configured)
+  });
   const utc=s=>{const a=String(s).split('-').map(Number);return Date.UTC(a[0],a[1]-1,a[2])};
   const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const cleanCategories=list=>{
@@ -332,9 +430,14 @@
     const cats=getCats();
     $('category').innerHTML=cats.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
     $('category').value=cats.includes(selected)?selected:cats[0];
+    if($('quickCategory')){
+      const current=$('quickCategory').value;
+      $('quickCategory').innerHTML=cats.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+      $('quickCategory').value=cats.includes(current)?current:(cats.includes(selected)?selected:cats[0]);
+    }
   }
 
-  let state={budget:435,payday:defaultPayday(),debt:1700,debtPayment:425,categories:[...DEFAULT_CATS],expenses:[]};
+  let state={budget:435,payday:defaultPayday(),debt:1700,debtPayment:425,categories:[...DEFAULT_CATS],expenses:[],monthlyPlan:normalizeMonthlyPlan(null)};
   let showAll=false;
   let editingExpenseId=null;
 
@@ -347,13 +450,22 @@
       state.debt=Math.max(0,num(v.debt));
       state.debtPayment=Math.max(0,num(v.debtPayment));
       state.expenses=Array.isArray(v.expenses)?v.expenses.filter(e=>e&&num(e.amount)>0).map(e=>({...e,category:normalizeCategory(e.category)})):[];
+      state.monthlyPlan=normalizeMonthlyPlan(v.monthlyPlan);
       const savedCats=Array.isArray(v.categories)?v.categories:DEFAULT_CATS;
       state.categories=cleanCategories([...savedCats,...state.expenses.map(e=>e.category)]);
       if(!state.categories.length)state.categories=[...DEFAULT_CATS];
     }catch(e){}
   }
   const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
-  const totalSpent=()=>state.expenses.reduce((s,e)=>s+num(e.amount),0);
+  const activeExpenses=()=>state.monthlyPlan&&state.monthlyPlan.configured
+    ?state.expenses.filter(e=>String(e.date||'').slice(0,7)===state.monthlyPlan.month)
+    :state.expenses;
+  const totalSpent=()=>activeExpenses().reduce((s,e)=>s+num(e.amount),0);
+  const mandatoryTotal=()=>state.monthlyPlan.mandatory.reduce((s,x)=>s+num(x.amount),0);
+  const debtReserve=()=>state.monthlyPlan.configured?Math.min(Math.max(0,state.debt),Math.max(0,state.debtPayment)):0;
+  const freeBudget=()=>state.monthlyPlan.configured
+    ?state.monthlyPlan.salary-mandatoryTotal()-debtReserve()
+    :state.budget;
   const daysLeft=()=>Math.max(1,Math.ceil((utc(state.payday)-utc(ymd(today())))/86400000));
   function dayWord(n){const a=n%10,b=n%100;if(a===1&&b!==11)return'день';if(a>=2&&a<=4&&!(b>=12&&b<=14))return'дні';return'днів'}
   function snapshotUndo(){localStorage.setItem(UNDO_KEY,JSON.stringify(state))}
@@ -374,7 +486,8 @@
         debt:Math.max(0,num(v.debt)),
         debtPayment:Math.max(0,num(v.debtPayment)),
         categories:cleanCategories(Array.isArray(v.categories)?v.categories:DEFAULT_CATS),
-        expenses:Array.isArray(v.expenses)?v.expenses.map(e=>({...e,category:normalizeCategory(e.category)})):[]
+        expenses:Array.isArray(v.expenses)?v.expenses.map(e=>({...e,category:normalizeCategory(e.category)})):[],
+        monthlyPlan:normalizeMonthlyPlan(v.monthlyPlan)
       };
       state.categories=cleanCategories([...state.categories,...state.expenses.map(e=>e.category)]);
       if(!state.categories.length)state.categories=[...DEFAULT_CATS];
@@ -389,15 +502,16 @@
   function render(){
     $('todayLabel').textContent=new Intl.DateTimeFormat('uk-UA',{day:'2-digit',month:'long'}).format(today());
     const spent=totalSpent();
-    const remain=state.budget-spent;
+    const baseBudget=freeBudget();
+    const remain=baseBudget-spent;
     const days=daysLeft();
     const daily=Math.max(0,remain)/days;
     const weekly=daily*Math.min(7,days);
-    const pct=state.budget>0?Math.max(0,Math.min(100,remain/state.budget*100)):0;
+    const pct=baseBudget>0?Math.max(0,Math.min(100,remain/baseBudget*100)):0;
 
     $('remaining').textContent=money(remain);
     $('budgetProgress').style.width=pct+'%';
-    $('spentText').textContent='Витрачено '+money(spent)+' із '+money(state.budget);
+    $('spentText').textContent='Щоденні витрати '+money(spent)+' із '+money(baseBudget);
     $('daysLeft').textContent=days+' '+dayWord(days);
     $('dailySafe').textContent=money(daily);
     $('weeklySafe').textContent=money(weekly);
@@ -405,11 +519,23 @@
     $('settingsPayday').value=state.payday;
     $('budgetInput').value=state.budget;
 
+    const plan=state.monthlyPlan;
+    $('monthlyPlanPeriod').textContent=plan.configured
+      ?new Intl.DateTimeFormat('uk-UA',{month:'long',year:'numeric'}).format(new Date(Number(plan.month.slice(0,4)),Number(plan.month.slice(5,7))-1,1))
+      :'Ще не налаштовано';
+    $('salarySummary').textContent=plan.configured?money(plan.salary):'—';
+    $('mandatorySummary').textContent=plan.configured?money(mandatoryTotal()):'—';
+    $('debtReserveSummary').textContent=plan.configured?money(debtReserve()):'—';
+    $('freeBudgetSummary').textContent=money(baseBudget);
+    $('monthlyPlanHint').textContent=plan.configured
+      ?'Доступний щоденний бюджет = зарплата − обов’язкові витрати − плановий платіж боргу.'
+      :'Поки місячний план не збережено, використовується ваш старий вільний бюджет '+money(state.budget)+'. Існуючі дані не змінені.';
+
     const pace=$('paceMessage');
     pace.className='status';
     if(remain<0){pace.classList.add('bad');pace.textContent='Вільний бюджет перевищено на '+money(Math.abs(remain))+'. Безпечний ліміт зараз — 0 €.'}
-    else if(state.expenses.length){pace.textContent='Після кожної витрати залишок грошей автоматично перерозподіляється на '+days+' '+dayWord(days)+'.'}
-    else pace.textContent='Додайте першу витрату — ліміти буде перераховано автоматично.';
+    else if(activeExpenses().length){pace.textContent='Після кожної щоденної витрати залишок автоматично перерозподіляється на '+days+' '+dayWord(days)+'.'}
+    else pace.textContent='Додайте першу щоденну витрату — ліміти буде перераховано автоматично.';
 
     $('debtDisplay').textContent=money(state.debt);
     $('debtPlanText').textContent=state.debt<=0?'Борг закрито.':'Плановий платіж: '+money(state.debtPayment);
@@ -421,25 +547,28 @@
 
     const cats=getCats();
     const totals=Object.fromEntries(cats.map(c=>[c,0]));
-    state.expenses.forEach(e=>{if(totals[e.category]===undefined)totals[e.category]=0;totals[e.category]+=num(e.amount)});
+    activeExpenses().forEach(e=>{if(totals[e.category]===undefined)totals[e.category]=0;totals[e.category]+=num(e.amount)});
     const max=Math.max(1,...Object.values(totals));
     $('categoryStats').innerHTML=cats.map(c=>'<div class="cat"><div class="catTop"><span>'+esc(c)+'</span><strong>'+money(totals[c]||0)+'</strong></div><div class="catBar"><span style="width:'+((totals[c]||0)/max*100)+'%"></span></div></div>').join('');
 
     const todayKey=ymd(today());
     const sevenStart=new Date(today());sevenStart.setDate(sevenStart.getDate()-6);
     const sevenStartKey=ymd(sevenStart);
-    const spent7=state.expenses.filter(e=>e.date>=sevenStartKey&&e.date<=todayKey).reduce((s,e)=>s+num(e.amount),0);
-    const dated=state.expenses.filter(e=>e.date).map(e=>e.date).sort();
+    const periodExpenses=activeExpenses();
+    const spent7=periodExpenses.filter(e=>e.date>=sevenStartKey&&e.date<=todayKey).reduce((s,e)=>s+num(e.amount),0);
+    const dated=periodExpenses.filter(e=>e.date).map(e=>e.date).sort();
     const firstDate=dated[0]||todayKey;
     const periodDays=Math.max(1,Math.floor((utc(todayKey)-utc(firstDate))/86400000)+1);
     const topEntry=Object.entries(totals).sort((a,b)=>b[1]-a[1])[0];
     $('statTotal').textContent=money(spent);
     $('stat7').textContent=money(spent7);
-    $('statDaily').textContent=money(state.expenses.length?spent/periodDays:0);
+    $('statDaily').textContent=money(periodExpenses.length?spent/periodDays:0);
     $('statTop').textContent=topEntry&&topEntry[1]>0?topEntry[0]:'—';
-    $('statPeriodText').textContent=state.expenses.length?'Період: '+groupDateText(firstDate)+' — '+groupDateText(todayKey):'Період ще не розпочато.';
+    $('statPeriodText').textContent=periodExpenses.length
+      ?(state.monthlyPlan.configured?'Місяць: '+state.monthlyPlan.month+' · ':'Період: ')+groupDateText(firstDate)+' — '+groupDateText(todayKey)
+      :'Період ще не розпочато.';
 
-    const ordered=[...state.expenses].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||((b.createdAt||0)-(a.createdAt||0)));
+    const ordered=[...periodExpenses].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||((b.createdAt||0)-(a.createdAt||0)));
     const rows=showAll?ordered:ordered.slice(0,6);
     $('toggleAll').textContent=showAll?'Сховати':'Показати все';
     if(rows.length){
@@ -456,6 +585,60 @@
       if(confirm('Видалити цей запис?')){snapshotUndo();state.expenses=state.expenses.filter(e=>e.id!==b.dataset.del);save();render();toast('Витрату видалено',true)}
     }));
   }
+
+  function renderMandatoryEditor(){
+    $('mandatoryList').innerHTML=state.monthlyPlan.mandatory.map((item,i)=>
+      '<div class="mandatoryRow">'+
+        '<div class="field"><label>Назва</label><input data-mandatory-name="'+i+'" maxlength="50" value="'+esc(item.name)+'"></div>'+
+        '<div class="field"><label>Сума, €</label><input data-mandatory-amount="'+i+'" inputmode="decimal" value="'+esc(String(num(item.amount)).replace('.',','))+'"></div>'+
+        '<button class="xBtn" data-mandatory-del="'+i+'" type="button" aria-label="Видалити">×</button>'+
+      '</div>'
+    ).join('');
+    document.querySelectorAll('[data-mandatory-del]').forEach(b=>b.addEventListener('click',()=>{
+      const i=Number(b.dataset.mandatoryDel);
+      state.monthlyPlan.mandatory.splice(i,1);
+      renderMandatoryEditor();
+    }));
+  }
+
+  function openMonthlyPlan(){
+    $('planMonth').value=state.monthlyPlan.month||currentMonth();
+    $('salaryInput').value=String(num(state.monthlyPlan.salary)).replace('.',',');
+    $('mandatoryName').value='';
+    renderMandatoryEditor();
+    $('monthlyPlanModal').classList.add('show');
+  }
+  function closeMonthlyPlan(){$('monthlyPlanModal').classList.remove('show')}
+
+  $('openMonthlyPlan').addEventListener('click',openMonthlyPlan);
+  $('closeMonthlyPlan').addEventListener('click',closeMonthlyPlan);
+  $('cancelMonthlyPlan').addEventListener('click',closeMonthlyPlan);
+  $('monthlyPlanModal').addEventListener('click',e=>{if(e.target===$('monthlyPlanModal'))closeMonthlyPlan()});
+
+  $('addMandatoryBtn').addEventListener('click',()=>{
+    const name=$('mandatoryName').value.trim();
+    if(!name){toast('Введіть назву витрати');return}
+    state.monthlyPlan.mandatory.push({
+      id:'mandatory-'+Date.now()+'-'+Math.random().toString(16).slice(2),
+      name,
+      amount:0
+    });
+    $('mandatoryName').value='';
+    renderMandatoryEditor();
+  });
+
+  $('saveMonthlyPlan').addEventListener('click',()=>{
+    const month=$('planMonth').value||currentMonth();
+    const salary=Math.max(0,num($('salaryInput').value));
+    const mandatory=state.monthlyPlan.mandatory.map((item,i)=>({
+      ...item,
+      name:(document.querySelector('[data-mandatory-name="'+i+'"]')?.value||item.name).trim()||item.name,
+      amount:Math.max(0,num(document.querySelector('[data-mandatory-amount="'+i+'"]')?.value))
+    }));
+    snapshotUndo();
+    state.monthlyPlan={month,salary,mandatory,configured:true};
+    save();render();closeMonthlyPlan();toast('Місячний план збережено',true);
+  });
 
   function renderCategoryEditor(){
     const cats=getCats();
@@ -500,6 +683,26 @@
   $('categoryManagerModal').addEventListener('click',e=>{if(e.target===$('categoryManagerModal'))closeCategoryManager()});
   $('addCategoryBtn').addEventListener('click',addCategory);
   $('newCategoryName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCategory()}});
+
+  $('quickExpenseForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const amount=num($('quickAmount').value);
+    if(amount<=0){toast('Введіть суму більше нуля');return}
+    snapshotUndo();
+    state.expenses.push({
+      id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),
+      amount,
+      category:$('quickCategory').value,
+      date:ymd(today()),
+      comment:'',
+      createdAt:Date.now()
+    });
+    $('quickAmount').value='';
+    save();render();toast('Витрату додано',true);
+    setTimeout(()=>$('quickAmount').focus(),60);
+  });
+
+  $('openDetailedExpense').addEventListener('click',openExpenseModal);
 
   function openExpenseModal(){
     editingExpenseId=null;
@@ -605,7 +808,8 @@
         debt:Math.max(0,num(v.debt)),
         debtPayment:Math.max(0,num(v.debtPayment)),
         categories:cleanCategories([...(Array.isArray(v.categories)?v.categories:DEFAULT_CATS),...importedExpenses.map(e=>e.category)]),
-        expenses:importedExpenses
+        expenses:importedExpenses,
+        monthlyPlan:normalizeMonthlyPlan(v.monthlyPlan)
       };
       if(!state.categories.length)state.categories=[...DEFAULT_CATS];
       save();render();toast('Резервну копію завантажено',true);
@@ -618,7 +822,7 @@
   $('expenseDate').value=ymd(today());
   renderCategorySelect();
   render();
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=7').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=8').catch(()=>{}));
 })();
 </script>
 </body>
