@@ -457,9 +457,20 @@
     }catch(e){}
   }
   const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
-  const activeExpenses=()=>state.monthlyPlan&&state.monthlyPlan.configured
-    ?state.expenses.filter(e=>String(e.date||'').slice(0,7)===state.monthlyPlan.month)
-    :state.expenses;
+  const budgetPeriod=()=>{
+    if(!(state.monthlyPlan&&state.monthlyPlan.configured))return null;
+    const start=state.monthlyPlan.month+'-01';
+    const end=state.payday||'';
+    return {start,end:end>start?end:''};
+  };
+  const activeExpenses=()=>{
+    const period=budgetPeriod();
+    if(!period)return state.expenses;
+    return state.expenses.filter(e=>{
+      const d=String(e.date||'');
+      return d>=period.start&&(!period.end||d<period.end);
+    });
+  };
   const totalSpent=()=>activeExpenses().reduce((s,e)=>s+num(e.amount),0);
   const mandatoryTotal=()=>state.monthlyPlan.mandatory.reduce((s,x)=>s+num(x.amount),0);
   const debtReserve=()=>state.monthlyPlan.configured?Math.max(0,state.debtPayment):0;
@@ -528,7 +539,7 @@
     $('debtReserveSummary').textContent=plan.configured?money(debtReserve()):'—';
     $('freeBudgetSummary').textContent=money(baseBudget);
     $('monthlyPlanHint').textContent=plan.configured
-      ?'Залишок на інші витрати = зарплата − обов’язкові витрати − плановий платіж боргу − вже внесені щоденні витрати.'
+      ?'Залишок на інші витрати = зарплата − обов’язкові витрати − плановий платіж боргу − щоденні витрати до наступної зарплати.'
       :'Поки місячний план не збережено, використовується ваш старий вільний бюджет '+money(state.budget)+'. Існуючі дані не змінені.';
 
     const pace=$('paceMessage');
@@ -564,9 +575,10 @@
     $('stat7').textContent=money(spent7);
     $('statDaily').textContent=money(periodExpenses.length?spent/periodDays:0);
     $('statTop').textContent=topEntry&&topEntry[1]>0?topEntry[0]:'—';
+    const period=budgetPeriod();
     $('statPeriodText').textContent=periodExpenses.length
-      ?(state.monthlyPlan.configured?'Місяць: '+state.monthlyPlan.month+' · ':'Період: ')+groupDateText(firstDate)+' — '+groupDateText(todayKey)
-      :'Період ще не розпочато.';
+      ?'Період: '+groupDateText(firstDate)+' — '+groupDateText(todayKey)
+      :(period&&period.end?'Період бюджету: '+groupDateText(period.start)+' — '+groupDateText(period.end):'Період ще не розпочато.');
 
     const ordered=[...periodExpenses].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||((b.createdAt||0)-(a.createdAt||0)));
     const rows=showAll?ordered:ordered.slice(0,6);
@@ -822,7 +834,7 @@
   $('expenseDate').value=ymd(today());
   renderCategorySelect();
   render();
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=9').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=10').catch(()=>{}));
 })();
 </script>
 </body>
